@@ -1,90 +1,99 @@
-# CLI Task Manager
+# CLI Project Manager
 
-A simple command-line task manager built with Python.
+A command-line project management system built with Python, designed as a microservice for task management.
 
 ## Features
 
-- Add, remove, and update tasks
-- Mark tasks as complete/incomplete
-- Filter tasks by status and priority
-- Persist tasks to a JSON file
-- Prioritize tasks (low, medium, high)
-- Set due dates
+- Create and manage projects
+- Add team members to projects
+- Link tasks to projects
+- Track project status (active, completed, archived)
+- View project analytics
+- Persist project data to JSON files
+- Support for multiple project roles (owner, admin, member)
 
 ## Installation
 
-1. Clone this repository:
+1. Navigate to the project service directory:
 ```
-git clone https://github.com/yourusername/cli-task-manager.git
-cd cli-task-manager
+cd services/project_service
 ```
 
 2. Install dependencies:
 ```
-pip install click
+pip install -r requirements.txt
 ```
 
-3. Create a symlink to make the CLI accessible from anywhere (optional):
+3. Create a symlink to make the CLI accessible globally (optional):
 ```
 pip install -e .
 ```
 
 ## Usage
 
-### Add a task
+### Create a new project
 ```
-python cli.py add "Complete homework assignment" --priority high --due "2023-05-15"
+python cli.py create "Website Redesign" "Redesign company website" --owner user123
 ```
 
-### List all tasks
+### List all projects
 ```
 python cli.py list
 ```
 
-### List only completed tasks
+### List projects by status
 ```
-python cli.py list --completed
-```
-
-### List tasks by priority
-```
-python cli.py list --priority high
+python cli.py list --status active
 ```
 
-### Mark a task as completed
+### List projects by owner
 ```
-python cli.py complete <task_id>
-```
-
-### Mark a task as not completed
-```
-python cli.py uncomplete <task_id>
+python cli.py list --owner user123
 ```
 
-### Show task details
+### Add member to project
 ```
-python cli.py show <task_id>
-```
-
-### Update a task
-```
-python cli.py update <task_id> --description "New description" --priority medium --due "2023-06-01"
+python cli.py add-member <project_id> <user_id>
 ```
 
-### Remove a task
+### Add task to project
 ```
-python cli.py remove <task_id>
+python cli.py add-task <project_id> <task_id>
+```
+
+### Update project status
+```
+python cli.py update-status <project_id> completed
+```
+
+### Show project details
+```
+python cli.py show <project_id>
+```
+
+### Remove project
+```
+python cli.py remove <project_id>
 ```
 
 ## File Structure
 
+- `src/`
+  - `models/project.py`: Project model class
+  - `storage/project_storage.py`: Data persistence layer
+  - `project_manager.py`: Business logic for managing projects
 - `cli.py`: Command-line interface using Click
-- `task_manager.py`: Business logic for managing tasks
-- `storage.py`: Data persistence layer
-- `task.py`: Task model class
-- `tasks.json`: Default storage file for tasks
+- `requirements.txt`: Project dependencies
+- `setup.py`: Package configuration
+- `projects.json`: Default storage file for projects
 
 ## Dependencies
 
 - Python 3.6+
-- Click: For building command-line interfaces 
+- Click: For building command-line interfaces
+
+## Integration
+
+This service integrates with the task management system by:
+- Linking tasks to projects
+- Sharing user information across services
