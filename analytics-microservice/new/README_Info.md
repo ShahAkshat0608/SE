@@ -486,3 +486,51 @@ To support filtering by project or user in global reports, you would need to enh
 - Modifying the service layer to support these filters
 
 > These would be reasonable extensions to the current functionality but aren't implemented in the current version of the microservice.
+
+
+### **Enhanced calls**
+
+##### URL BASED
+###### Get completion rate for a specific project
+````
+curl http://localhost:5000/api/analytics/completion-rate?project_id=proj1
+````
+
+###### Get team workload filtered by project
+````
+curl http://localhost:5000/api/analytics/team-workload?project_id=proj1
+````
+
+###### Get productivity metrics for a specific project for the last 14 days
+````
+curl http://localhost:5000/api/analytics/productivity?days=14&project_id=proj1
+````
+
+###### Get complete report filtered by team
+````
+curl http://localhost:5000/api/analytics/report?team_id=team1
+````
+
+##### CLI BASED
+
+
+###### Get completion rate for a specific project
+````
+python -m src.cli.commands report --type completion --project proj1
+````
+###### Get pending work analysis for a specific project
+````
+python -m src.cli.commands report --type pending --project proj1
+````
+###### Get team workload filtered by project
+````
+python -m src.cli.commands report --type team --project proj1
+````
+###### Get user productivity for a specific user on a specific project
+````
+python -m src.cli.commands user user1 --project proj1
+````
+###### Get complete report for a specific team
+````
+python -m src.cli.commands report --type full --team team1
+````

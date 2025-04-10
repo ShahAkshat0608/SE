@@ -6,6 +6,25 @@ from datetime import datetime
 
 
 @dataclass
+class FiltersDto:
+    """DTO for filter information."""
+    project_id: Optional[str] = None
+    project_name: Optional[str] = None
+    team_id: Optional[str] = None
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> Optional['FiltersDto']:
+        """Create DTO from dictionary."""
+        if not data:
+            return None
+        return cls(
+            project_id=data.get('project_id'),
+            project_name=data.get('project_name'),
+            team_id=data.get('team_id')
+        )
+
+
+@dataclass
 class CompletionRateResponseDto:
     """DTO for task completion rate response."""
     time_period_days: int
@@ -13,16 +32,19 @@ class CompletionRateResponseDto:
     completed_tasks: int
     pending_tasks: int
     completion_rate_percentage: float
+    filters: Optional[FiltersDto] = None
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'CompletionRateResponseDto':
         """Create DTO from dictionary."""
+        filters = FiltersDto.from_dict(data.get('filters', {}))
         return cls(
             time_period_days=data.get('time_period_days', 0),
             total_tasks=data.get('total_tasks', 0),
             completed_tasks=data.get('completed_tasks', 0),
             pending_tasks=data.get('pending_tasks', 0),
             completion_rate_percentage=data.get('completion_rate_percentage', 0.0),
+            filters=filters,
         )
 
 
@@ -34,16 +56,19 @@ class PendingWorkResponseDto:
     overdue_tasks: int
     overdue_percentage: float
     average_days_pending: float
+    filters: Optional[FiltersDto] = None
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'PendingWorkResponseDto':
         """Create DTO from dictionary."""
+        filters = FiltersDto.from_dict(data.get('filters', {}))
         return cls(
             total_pending=data.get('total_pending', 0),
             by_priority=data.get('by_priority', {}),
             overdue_tasks=data.get('overdue_tasks', 0),
             overdue_percentage=data.get('overdue_percentage', 0.0),
             average_days_pending=data.get('average_days_pending', 0.0),
+            filters=filters,
         )
 
 
@@ -56,10 +81,12 @@ class ProductivityMetricsResponseDto:
     daily_completion: Dict[str, int]
     weekly_trends: Dict[str, int]
     average_daily_completion: float
+    filters: Optional[FiltersDto] = None
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'ProductivityMetricsResponseDto':
         """Create DTO from dictionary."""
+        filters = FiltersDto.from_dict(data.get('filters', {}))
         return cls(
             time_period_days=data.get('time_period_days', 0),
             tasks_completed=data.get('tasks_completed', 0),
@@ -67,6 +94,7 @@ class ProductivityMetricsResponseDto:
             daily_completion=data.get('daily_completion', {}),
             weekly_trends=data.get('weekly_trends', {}),
             average_daily_completion=data.get('average_daily_completion', 0.0),
+            filters=filters,
         )
 
 
@@ -80,10 +108,12 @@ class TeamWorkloadResponseDto:
     most_overloaded_user: Optional[str]
     least_loaded_user: Optional[str]
     workload_distribution: Dict[str, float]
+    filters: Optional[FiltersDto] = None
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'TeamWorkloadResponseDto':
         """Create DTO from dictionary."""
+        filters = FiltersDto.from_dict(data.get('filters', {}))
         return cls(
             total_users=data.get('total_users', 0),
             total_tasks=data.get('total_tasks', 0),
@@ -92,6 +122,7 @@ class TeamWorkloadResponseDto:
             most_overloaded_user=data.get('most_overloaded_user'),
             least_loaded_user=data.get('least_loaded_user'),
             workload_distribution=data.get('workload_distribution', {}),
+            filters=filters,
         )
 
 
@@ -127,6 +158,34 @@ class ProjectProgressResponseDto:
 
 
 @dataclass
+class UserProductivityResponseDto:
+    """DTO for user productivity response."""
+    user_id: str
+    user_name: str
+    user_role: str
+    time_period_days: int
+    tasks_completed: int
+    avg_completion_time_hours: float
+    average_daily_completion: float
+    filters: Optional[FiltersDto] = None
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'UserProductivityResponseDto':
+        """Create DTO from dictionary."""
+        filters = FiltersDto.from_dict(data.get('filters', {}))
+        return cls(
+            user_id=data.get('user_id', ''),
+            user_name=data.get('user_name', ''),
+            user_role=data.get('user_role', ''),
+            time_period_days=data.get('time_period_days', 0),
+            tasks_completed=data.get('tasks_completed', 0),
+            avg_completion_time_hours=data.get('avg_completion_time_hours', 0.0),
+            average_daily_completion=data.get('average_daily_completion', 0.0),
+            filters=filters,
+        )
+
+
+@dataclass
 class AnalyticsReportResponseDto:
     """DTO for complete analytics report response."""
     completion_rate: CompletionRateResponseDto
@@ -135,6 +194,7 @@ class AnalyticsReportResponseDto:
     team_workload: Optional[TeamWorkloadResponseDto]
     projects: Optional[Dict[str, Any]]
     generated_at: str
+    filters: Optional[FiltersDto] = None
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'AnalyticsReportResponseDto':
@@ -153,6 +213,8 @@ class AnalyticsReportResponseDto:
         if 'team_workload' in data:
             team_workload = TeamWorkloadResponseDto.from_dict(data['team_workload'])
         
+        filters = FiltersDto.from_dict(data.get('filters', {}))
+        
         return cls(
             completion_rate=completion_rate,
             pending_work=pending_work,
@@ -160,4 +222,5 @@ class AnalyticsReportResponseDto:
             team_workload=team_workload,
             projects=data.get('projects'),
             generated_at=data.get('generated_at', datetime.now().isoformat()),
+            filters=filters,
         )

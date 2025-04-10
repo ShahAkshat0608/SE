@@ -28,23 +28,49 @@ class AnalyticsController:
     def get_completion_rate(self):
         """Get task completion rate statistics."""
         days = self._parse_days_param()
-        result = self.analytics_service.get_completion_rate(days)
+        project_id = request.args.get('project_id')
+        team_id = request.args.get('team_id')
+        
+        result = self.analytics_service.get_completion_rate(
+            days, 
+            project_id=project_id,
+            team_id=team_id
+        )
         return jsonify(result)
     
     def get_pending_work(self):
         """Get pending work statistics."""
-        result = self.analytics_service.get_pending_work_analysis()
+        project_id = request.args.get('project_id')
+        team_id = request.args.get('team_id')
+        
+        result = self.analytics_service.get_pending_work_analysis(
+            project_id=project_id,
+            team_id=team_id
+        )
         return jsonify(result)
     
     def get_productivity_metrics(self):
         """Get productivity metrics."""
         days = self._parse_days_param()
-        result = self.analytics_service.get_productivity_metrics(days)
+        project_id = request.args.get('project_id')
+        team_id = request.args.get('team_id')
+        
+        result = self.analytics_service.get_productivity_metrics(
+            days,
+            project_id=project_id,
+            team_id=team_id
+        )
         return jsonify(result)
     
     def get_team_workload(self):
         """Get team workload distribution."""
-        result = self.analytics_service.get_team_workload()
+        project_id = request.args.get('project_id')
+        team_id = request.args.get('team_id')
+        
+        result = self.analytics_service.get_team_workload(
+            project_id=project_id,
+            team_id=team_id
+        )
         if "error" in result:
             raise ValidationError("Failed to get team workload", {"reason": result["error"]})
         return jsonify(result)
@@ -74,14 +100,26 @@ class AnalyticsController:
             user_id: ID of the user to analyze
         """
         days = self._parse_days_param()
-        result = self.analytics_service.get_user_productivity(user_id, days)
+        project_id = request.args.get('project_id')
+        
+        result = self.analytics_service.get_user_productivity(
+            user_id, 
+            days,
+            project_id=project_id
+        )
         if "error" in result:
             raise ResourceNotFoundError("user", user_id)
         return jsonify(result)
     
     def get_complete_report(self):
         """Get complete analytics report."""
-        result = self.analytics_service.get_complete_analytics_report()
+        project_id = request.args.get('project_id')
+        team_id = request.args.get('team_id')
+        
+        result = self.analytics_service.get_complete_analytics_report(
+            project_id=project_id,
+            team_id=team_id
+        )
         return jsonify(result)
     
     def _parse_days_param(self) -> int:

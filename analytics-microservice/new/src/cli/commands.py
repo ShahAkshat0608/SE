@@ -58,6 +58,10 @@ class AnalyticsCLI:
                                 help="Type of report to generate")
         report_parser.add_argument("--days", type=int, default=self.settings.DEFAULT_TIME_PERIOD_DAYS,
                                  help="Time period in days")
+        report_parser.add_argument("--project", type=str,
+                                 help="Filter by project ID")
+        report_parser.add_argument("--team", type=str,
+                                 help="Filter by team ID")
         report_parser.add_argument("--json", action="store_true",
                                  help="Output in JSON format")
         report_parser.add_argument("--output", type=str,
@@ -75,6 +79,8 @@ class AnalyticsCLI:
         user_parser.add_argument("user_id", help="ID of the user to analyze")
         user_parser.add_argument("--days", type=int, default=self.settings.DEFAULT_TIME_PERIOD_DAYS,
                                help="Time period in days")
+        user_parser.add_argument("--project", type=str,
+                               help="Filter by project ID")
         user_parser.add_argument("--json", action="store_true", help="Output in JSON format")
         
         # Version command
@@ -150,16 +156,37 @@ class AnalyticsCLI:
         
         report: Dict[str, Any] = {}
         
+        # Get filter parameters
+        project_id = getattr(args, "project", None)
+        team_id = getattr(args, "team", None)
+        
         if args.type == "full":
-            report = self.analytics_service.get_complete_analytics_report()
+            report = self.analytics_service.get_complete_analytics_report(
+                project_id=project_id, 
+                team_id=team_id
+            )
         elif args.type == "completion":
-            report = {"completion_rate": self.analytics_service.get_completion_rate(args.days)}
+            report = {"completion_rate": self.analytics_service.get_completion_rate(
+                args.days, 
+                project_id=project_id,
+                team_id=team_id
+            )}
         elif args.type == "pending":
-            report = {"pending_work": self.analytics_service.get_pending_work_analysis()}
+            report = {"pending_work": self.analytics_service.get_pending_work_analysis(
+                project_id=project_id,
+                team_id=team_id
+            )}
         elif args.type == "productivity":
-            report = {"productivity": self.analytics_service.get_productivity_metrics(args.days)}
+            report = {"productivity": self.analytics_service.get_productivity_metrics(
+                args.days,
+                project_id=project_id,
+                team_id=team_id
+            )}
         elif args.type == "team":
-            team_data = self.analytics_service.get_team_workload()
+            team_data = self.analytics_service.get_team_workload(
+                project_id=project_id,
+                team_id=team_id
+            )
             if hasattr(args, "debug") and args.debug:
                 print(f"DEBUG - Team workload data: {json.dumps(team_data, indent=2)}")
             report = {"team_workload": team_data}
@@ -198,7 +225,14 @@ class AnalyticsCLI:
         Returns:
             Exit code
         """
-        user_report = self.analytics_service.get_user_productivity(args.user_id, args.days)
+        # Get project filter if specified
+        project_id = getattr(args, "project", None)
+        
+        user_report = self.analytics_service.get_user_productivity(
+            args.user_id, 
+            args.days,
+            project_id=project_id
+        )
         
         if "error" in user_report:
             logger.error(f"User error: {user_report['error']}")
@@ -250,6 +284,26 @@ class AnalyticsCLI:
             Formatted report text
         """
         lines = ["===== TASK ANALYTICS REPORT =====\n"]
+        
+        # Add filters information if present in any part of the report
+        filters = self._extract_filters_from_report(report)
+        if filters:
+            lines.append("FILTERS APPLIED:")
+            for key, value in filters.items():
+                if key == "project_id":
+                    project_name = "Unknown"
+                    if "project_name" in filters:
+                        project_name = filters["project_name"]
+                    elif hasattr(self.analytics_service, 'project_repository') and self.analytics_service.project_repository:
+                        project = self.analytics_service.project_repository.get_project(value)
+                        if project:
+                            project_name = project.name
+                    lines.append(f"  Project: {project_name} ({value})")
+                elif key == "team_id":
+                    lines.append(f"  Team: {value}")
+                elif key != "project_name":  # Skip project_name as it's displayed with project_id
+                    lines.append(f"  {key.replace('_', ' ').title()}: {value}")
+            lines.append("")
         
         # Format completion rate
         if "completion_rate" in report:
@@ -370,6 +424,26 @@ class AnalyticsCLI:
         generated_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         lines.append(f"Generated at: {generated_at}")
         return "\n".join(lines)
+    
+    def _extract_filters_from_report(self, report: Dict[str, Any]) -> Dict[str, Any]:
+        """Extract filter information from report.
+        
+        Args:
+            report: Report data
+            
+        Returns:
+            Dict with filter information
+        """
+        # Check if top level report has filters
+        if "filters" in report:
+            return report["filters"]
+        
+        # Check each section for filters
+        for section_key, section_data in report.items():
+            if isinstance(section_data, dict) and "filters" in section_data:
+                return section_data["filters"]
+        
+        return {}
     
     def _check_data_files(self) -> None:
         """Check if data files exist and have content."""
