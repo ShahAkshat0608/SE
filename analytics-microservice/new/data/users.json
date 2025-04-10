@@ -1,0 +1,42 @@
+{
+    "user1": {
+      "name": "John Smith",
+      "email": "john.smith@example.com",
+      "role": "Senior Developer",
+      "workload_capacity": 40,
+      "skills": ["python", "javascript", "database design"],
+      "teams": ["backend", "architecture"]
+    },
+    "user2": {
+      "name": "Emily Johnson",
+      "email": "emily.johnson@example.com",
+      "role": "Frontend Developer",
+      "workload_capacity": 35,
+      "skills": ["javascript", "react", "css", "ui design"],
+      "teams": ["frontend"]
+    },
+    "user3": {
+      "name": "Michael Chen",
+      "email": "michael.chen@example.com",
+      "role": "DevOps Engineer",
+      "workload_capacity": 40,
+      "skills": ["kubernetes", "aws", "ci/cd", "python"],
+      "teams": ["devops", "backend"]
+    },
+    "user4": {
+      "name": "Sarah Williams",
+      "email": "sarah.williams@example.com",
+      "role": "UX Designer",
+      "workload_capacity": 30,
+      "skills": ["ui design", "user research", "figma"],
+      "teams": ["design", "frontend"]
+    },
+    "user5": {
+      "name": "Alex Rodriguez",
+      "email": "alex.rodriguez@example.com",
+      "role": "Product Manager",
+      "workload_capacity": 45,
+      "skills": ["product strategy", "agile", "requirements"],
+      "teams": ["management"]
+    }
+  }

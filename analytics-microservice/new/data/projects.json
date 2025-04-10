@@ -1,0 +1,103 @@
+{
+    "proj1": {
+      "name": "User Authentication System",
+      "description": "Implement secure user authentication and authorization",
+      "start_date": "2025-03-25T00:00:00",
+      "target_end_date": "2025-04-25T00:00:00",
+      "status": "in_progress",
+      "manager_id": "user1",
+      "team_members": ["user1", "user2", "user4"],
+      "milestones": [
+        {
+          "id": "milestone1",
+          "name": "Authentication API",
+          "description": "Implement basic authentication API",
+          "due_date": "2025-04-10T00:00:00",
+          "completed": true
+        },
+        {
+          "id": "milestone2",
+          "name": "Frontend Integration",
+          "description": "Integrate authentication with frontend",
+          "due_date": "2025-04-20T00:00:00",
+          "completed": false
+        }
+      ],
+      "metadata": {
+        "priority": "high",
+        "client": "internal"
+      }
+    },
+    "proj2": {
+      "name": "Performance Optimization",
+      "description": "Optimize application performance and reduce load times",
+      "start_date": "2025-04-01T00:00:00",
+      "target_end_date": "2025-05-15T00:00:00",
+      "status": "in_progress",
+      "manager_id": "user3",
+      "team_members": ["user1", "user2", "user3"],
+      "milestones": [
+        {
+          "id": "milestone1",
+          "name": "Performance Audit",
+          "description": "Identify performance bottlenecks",
+          "due_date": "2025-04-07T00:00:00",
+          "completed": true
+        },
+        {
+          "id": "milestone2",
+          "name": "Database Optimization",
+          "description": "Optimize database queries and indexes",
+          "due_date": "2025-04-21T00:00:00",
+          "completed": false
+        },
+        {
+          "id": "milestone3",
+          "name": "Frontend Optimization",
+          "description": "Optimize frontend assets and loading",
+          "due_date": "2025-05-05T00:00:00",
+          "completed": false
+        }
+      ],
+      "metadata": {
+        "priority": "medium",
+        "client": "internal"
+      }
+    },
+    "proj3": {
+      "name": "Analytics Dashboard",
+      "description": "Create a comprehensive analytics dashboard for business metrics",
+      "start_date": "2025-04-05T00:00:00",
+      "target_end_date": "2025-05-20T00:00:00",
+      "status": "in_progress",
+      "manager_id": "user4",
+      "team_members": ["user3", "user4"],
+      "milestones": [
+        {
+          "id": "milestone1",
+          "name": "Requirements Gathering",
+          "description": "Gather requirements from stakeholders",
+          "due_date": "2025-04-12T00:00:00",
+          "completed": true
+        },
+        {
+          "id": "milestone2",
+          "name": "UI Design",
+          "description": "Design dashboard UI and components",
+          "due_date": "2025-04-26T00:00:00",
+          "completed": false
+        },
+        {
+          "id": "milestone3",
+          "name": "Implementation",
+          "description": "Implement dashboard functionality",
+          "due_date": "2025-05-15T00:00:00",
+          "completed": false
+        }
+      ],
+      "metadata": {
+        "priority": "medium",
+        "client": "marketing"
+      }
+    }
+  }

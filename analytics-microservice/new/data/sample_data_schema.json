@@ -1,0 +1,68 @@
+{
+    "projects": {
+      "project1": {
+        "id": "project1",
+        "name": "Website Redesign",
+        "description": "Revamp the company website",
+        "start_date": "2025-03-01T00:00:00",
+        "target_end_date": "2025-05-30T00:00:00",
+        "status": "in_progress",
+        "manager_id": "user1",
+        "team_members": ["user1", "user2", "user3"],
+        "milestones": [
+          {
+            "id": "milestone1",
+            "name": "Design Phase Complete",
+            "due_date": "2025-03-30T00:00:00",
+            "completed": true
+          }
+        ],
+        "metadata": {
+          "priority": "high",
+          "client": "Internal",
+          "department": "Marketing",
+          "tags": ["website", "redesign"]
+        }
+      }
+    },
+    
+    "users": {
+      "user1": {
+        "id": "user1",
+        "name": "John Doe",
+        "email": "john@example.com",
+        "role": "project_manager",
+        "skills": ["management", "planning"],
+        "teams": ["team1"],
+        "workload_capacity": 40
+      }
+    },
+    
+    "tasks": {
+      "task1": {
+        "id": "task1",
+        "project_id": "project1",
+        "milestone_id": "milestone1",
+        "assigned_to": "user2",
+        "description": "Implement login feature",
+        "priority": "high",
+        "estimated_hours": 8,
+        "actual_hours": 10,
+        "due_date": "2025-04-20T00:00:00",
+        "completed": false,
+        "created_at": "2025-04-01T10:00:00",
+        "created_by": "user1",
+        "dependencies": ["task3"],
+        "tags": ["frontend", "auth"]
+      }
+    },
+    
+    "teams": {
+      "team1": {
+        "id": "team1",
+        "name": "Web Development",
+        "lead_id": "user1",
+        "members": ["user1", "user2", "user3"]
+      }
+    }
+  }
