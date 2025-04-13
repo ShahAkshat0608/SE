@@ -197,25 +197,30 @@ class AnalyticsService(AnalyticsServicePort):
             return {"error": "User repository not available"}
         
         tasks = list(self.task_repository.get_all_tasks().values())
-        
-        # Apply filtering
-        tasks = self._filter_tasks_by_project_and_team(tasks, project_id, team_id)
-        
         users = self.user_repository.get_all_users()
         
-        # If team_id is specified, filter users by team
-        if team_id and hasattr(users[next(iter(users))], 'team_id'):
-            users = {uid: user for uid, user in users.items() if getattr(user, 'team_id', None) == team_id}
+        # Filter tasks by project if needed
+        if project_id:
+            tasks = [task for task in tasks if task.project_id == project_id]
+            
+            # If we have a project ID, we can also filter users to just those in the project team
+            if self.project_repository:
+                project = self.project_repository.get_project(project_id)
+                if project and hasattr(project, 'team_members'):
+                    # Get the user IDs from the project's team members
+                    project_user_ids = [member.user_id for member in project.team_members]
+                    # Filter users to just those in the project team
+                    users = {user_id: user for user_id, user in users.items() if user_id in project_user_ids}
+        
+        # Further filter tasks to only those assigned to these users
+        user_ids = list(users.keys())
+        tasks = [task for task in tasks if task.assigned_to in user_ids]
         
         result = self.team_workload_strategy.calculate(tasks=tasks, users=users)
         
         # Add filter information
-        if project_id or team_id:
-            result["filters"] = {}
-            if project_id:
-                result["filters"]["project_id"] = project_id
-            if team_id:
-                result["filters"]["team_id"] = team_id
+        if project_id:
+            result["filters"] = {"project_id": project_id}
                 
         return result
     

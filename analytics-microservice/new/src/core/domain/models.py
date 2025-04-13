@@ -1,206 +1,25 @@
-"""Core domain models and value objects."""
+"""Domain models for the analytics microservice."""
 
 from dataclasses import dataclass, field
-from datetime import datetime
-from typing import List, Optional, Dict, Any
+from datetime import datetime, timedelta
+from typing import Dict, List, Optional, Any
 
 
-@dataclass
-class Task:
-    """Task entity representing a single work item."""
-    
-    id: str
-    description: str
-    priority: str
-    due_date: Optional[datetime] = None
-    completed: bool = False
-    created_at: datetime = field(default_factory=datetime.now)
-    completed_at: Optional[datetime] = None
-    project_id: Optional[str] = None
-    assigned_to: Optional[str] = None
-    estimated_hours: Optional[float] = None
-    actual_hours: Optional[float] = None
-    dependencies: List[str] = field(default_factory=list)
-    tags: List[str] = field(default_factory=list)
-    
-    @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Task':
-        """Create a Task from a dictionary.
-        
-        Args:
-            data: Dictionary containing task data
-            
-        Returns:
-            Task object
-        """
-        # Process date fields
-        created_at = data.get('created_at')
-        if created_at and isinstance(created_at, str):
-            created_at = datetime.fromisoformat(created_at)
-        else:
-            created_at = datetime.now()
-        
-        completed_at = data.get('completed_at')
-        if completed_at and isinstance(completed_at, str):
-            completed_at = datetime.fromisoformat(completed_at)
-            
-        due_date = data.get('due_date')
-        if due_date and isinstance(due_date, str):
-            due_date = datetime.fromisoformat(due_date)
-            
-        # Create Task object
-        return cls(
-            id=data.get('id', ''),
-            description=data.get('description', ''),
-            priority=data.get('priority', 'medium'),
-            due_date=due_date,
-            completed=data.get('completed', False),
-            created_at=created_at,
-            completed_at=completed_at,
-            project_id=data.get('project_id'),
-            assigned_to=data.get('assigned_to'),
-            estimated_hours=data.get('estimated_hours'),
-            actual_hours=data.get('actual_hours'),
-            dependencies=data.get('dependencies', []),
-            tags=data.get('tags', [])
-        )
-    
-    def to_dict(self) -> Dict[str, Any]:
-        """Convert Task to a dictionary.
-        
-        Returns:
-            Dictionary representation of task
-        """
-        result = {
-            'id': self.id,
-            'description': self.description,
-            'priority': self.priority,
-            'completed': self.completed,
-            'created_at': self.created_at.isoformat()
-        }
-        
-        # Add optional fields if present
-        if self.due_date:
-            result['due_date'] = self.due_date.isoformat()
-        if self.completed_at:
-            result['completed_at'] = self.completed_at.isoformat()
-        if self.project_id:
-            result['project_id'] = self.project_id
-        if self.assigned_to:
-            result['assigned_to'] = self.assigned_to
-        if self.estimated_hours is not None:
-            result['estimated_hours'] = self.estimated_hours
-        if self.actual_hours is not None:
-            result['actual_hours'] = self.actual_hours
-        if self.dependencies:
-            result['dependencies'] = self.dependencies
-        if self.tags:
-            result['tags'] = self.tags
-            
-        return result
+def parse_date(date_str: Optional[str]) -> Optional[datetime]:
+    """Parse a date string into a datetime object."""
+    if not date_str:
+        return None
+    try:
+        return datetime.fromisoformat(date_str.replace('Z', '+00:00'))
+    except (ValueError, AttributeError):
+        return None
 
 
-@dataclass
-class Milestone:
-    """Milestone representing a significant point in a project timeline."""
-    
-    id: str
-    name: str
-    due_date: datetime
-    completed: bool = False
-    
-    @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Milestone':
-        """Create a Milestone from a dictionary."""
-        due_date = data.get('due_date')
-        if due_date and isinstance(due_date, str):
-            due_date = datetime.fromisoformat(due_date)
-        else:
-            due_date = datetime.now()
-            
-        return cls(
-            id=data.get('id', ''),
-            name=data.get('name', ''),
-            due_date=due_date,
-            completed=data.get('completed', False)
-        )
-    
-    def to_dict(self) -> Dict[str, Any]:
-        """Convert Milestone to a dictionary."""
-        return {
-            'id': self.id,
-            'name': self.name,
-            'due_date': self.due_date.isoformat(),
-            'completed': self.completed
-        }
-
-
-@dataclass
-class Project:
-    """Project entity representing a collection of related tasks."""
-    
-    id: str
-    name: str
-    description: str = ''
-    start_date: Optional[datetime] = None
-    target_end_date: Optional[datetime] = None
-    status: str = 'in_progress'
-    manager_id: Optional[str] = None
-    team_members: List[str] = field(default_factory=list)
-    milestones: List[Milestone] = field(default_factory=list)
-    metadata: Dict[str, Any] = field(default_factory=dict)
-    
-    @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Project':
-        """Create a Project from a dictionary."""
-        # Process date fields
-        start_date = data.get('start_date')
-        if start_date and isinstance(start_date, str):
-            start_date = datetime.fromisoformat(start_date)
-            
-        target_end_date = data.get('target_end_date')
-        if target_end_date and isinstance(target_end_date, str):
-            target_end_date = datetime.fromisoformat(target_end_date)
-            
-        # Process milestones
-        milestones = []
-        for milestone_data in data.get('milestones', []):
-            milestones.append(Milestone.from_dict(milestone_data))
-            
-        return cls(
-            id=data.get('id', ''),
-            name=data.get('name', ''),
-            description=data.get('description', ''),
-            start_date=start_date,
-            target_end_date=target_end_date,
-            status=data.get('status', 'in_progress'),
-            manager_id=data.get('manager_id'),
-            team_members=data.get('team_members', []),
-            milestones=milestones,
-            metadata=data.get('metadata', {})
-        )
-    
-    def to_dict(self) -> Dict[str, Any]:
-        """Convert Project to a dictionary."""
-        result = {
-            'id': self.id,
-            'name': self.name,
-            'description': self.description,
-            'status': self.status,
-            'team_members': self.team_members,
-            'milestones': [m.to_dict() for m in self.milestones],
-            'metadata': self.metadata
-        }
-        
-        # Add optional fields if present
-        if self.start_date:
-            result['start_date'] = self.start_date.isoformat()
-        if self.target_end_date:
-            result['target_end_date'] = self.target_end_date.isoformat()
-        if self.manager_id:
-            result['manager_id'] = self.manager_id
-            
-        return result
+def format_date(date_obj: Optional[datetime]) -> Optional[str]:
+    """Format a datetime object into an ISO string."""
+    if not date_obj:
+        return None
+    return date_obj.isoformat()
 
 
 @dataclass
@@ -209,11 +28,9 @@ class User:
     
     id: str
     name: str
-    email: str
-    role: str = 'user'
-    skills: List[str] = field(default_factory=list)
-    teams: List[str] = field(default_factory=list)
-    workload_capacity: float = 40.0  # Default to 40 hours/week capacity
+    email: str = ""
+    role: str = "user"
+    workload_capacity: float = 40.0
     
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'User':
@@ -223,19 +40,228 @@ class User:
             name=data.get('name', ''),
             email=data.get('email', ''),
             role=data.get('role', 'user'),
-            skills=data.get('skills', []),
-            teams=data.get('teams', []),
             workload_capacity=data.get('workload_capacity', 40.0)
         )
+
+
+@dataclass
+class Task:
+    """Task entity representing a work item."""
     
-    def to_dict(self) -> Dict[str, Any]:
-        """Convert User to a dictionary."""
-        return {
-            'id': self.id,
-            'name': self.name,
-            'email': self.email,
-            'role': self.role,
-            'skills': self.skills,
-            'teams': self.teams,
-            'workload_capacity': self.workload_capacity
-        }
+    id: str
+    description: str
+    project_id: str
+    created_at: datetime
+    priority: str = "medium"
+    due_date: Optional[datetime] = None
+    completed: bool = False
+    completed_at: Optional[datetime] = None
+    assigned_to: Optional[str] = None
+    estimated_hours: Optional[float] = None
+    
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'Task':
+        """Create a Task from a dictionary."""
+        created_at = parse_date(data.get('created_at'))
+        due_date = parse_date(data.get('due_date'))
+        completed_at = parse_date(data.get('completed_at'))
+        
+        return cls(
+            id=data.get('id', ''),
+            description=data.get('description', ''),
+            project_id=data.get('project_id', ''),
+            created_at=created_at or datetime.now(),
+            priority=data.get('priority', 'medium'),
+            due_date=due_date,
+            completed=data.get('completed', False),
+            completed_at=completed_at,
+            assigned_to=data.get('assigned_to'),
+            estimated_hours=data.get('estimated_hours')
+        )
+
+
+@dataclass
+class Milestone:
+    """Milestone entity representing a project checkpoint."""
+    
+    id: str
+    name: str
+    description: str
+    due_date: datetime
+    completed: bool = False
+    created_at: datetime = field(default_factory=datetime.now)
+    updated_at: Optional[datetime] = None
+    
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'Milestone':
+        """Create a Milestone from a dictionary."""
+        due_date = parse_date(data.get('due_date'))
+        created_at = parse_date(data.get('created_at'))
+        updated_at = parse_date(data.get('updated_at'))
+        
+        return cls(
+            id=data.get('id', ''),
+            name=data.get('name', ''),
+            description=data.get('description', ''),
+            due_date=due_date or datetime.now(),
+            completed=data.get('completed', False),
+            created_at=created_at or datetime.now(),
+            updated_at=updated_at
+        )
+
+
+@dataclass
+class ProjectTask:
+    """Task reference within a project."""
+    
+    project_id: str
+    id: str
+    order: int
+    created_at: datetime = field(default_factory=datetime.now)
+    
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'ProjectTask':
+        """Create a ProjectTask from a dictionary."""
+        created_at = parse_date(data.get('created_at'))
+        
+        return cls(
+            project_id=data.get('project_id', ''),
+            id=data.get('id', ''),
+            order=data.get('order', 0),
+            created_at=created_at or datetime.now()
+        )
+
+
+@dataclass
+class Dependency:
+    """Dependency relationship between tasks or milestones."""
+    
+    id: str
+    source_id: str
+    target_id: str
+    source_type: str = "task"
+    target_type: str = "task"
+    created_at: datetime = field(default_factory=datetime.now)
+    
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'Dependency':
+        """Create a Dependency from a dictionary."""
+        created_at = parse_date(data.get('created_at'))
+        
+        return cls(
+            id=data.get('id', ''),
+            source_id=data.get('source_id', ''),
+            target_id=data.get('target_id', ''),
+            source_type=data.get('source_type', 'task'),
+            target_type=data.get('target_type', 'task'),
+            created_at=created_at or datetime.now()
+        )
+
+
+@dataclass
+class TeamMember:
+    """Team member assignment to a project."""
+    
+    id: str
+    user_id: str
+    role: str = "team_member"
+    created_at: datetime = field(default_factory=datetime.now)
+    
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'TeamMember':
+        """Create a TeamMember from a dictionary."""
+        created_at = parse_date(data.get('created_at'))
+        
+        return cls(
+            id=data.get('id', ''),
+            user_id=data.get('user_id', ''),
+            role=data.get('role', 'team_member'),
+            created_at=created_at or datetime.now()
+        )
+
+
+@dataclass
+class Project:
+    """Project entity representing a collection of tasks."""
+    
+    id: str
+    name: str
+    description: str
+    status: str
+    start_date: datetime
+    target_end_date: datetime
+    manager_id: str
+    completion_percentage: float = 0.0
+    created_at: datetime = field(default_factory=datetime.now)
+    updated_at: Optional[datetime] = None
+    milestones: List[Milestone] = field(default_factory=list)
+    tasks: List[ProjectTask] = field(default_factory=list)
+    dependencies: List[Dependency] = field(default_factory=list)
+    team_members: List[TeamMember] = field(default_factory=list)
+    metadata: Dict[str, Any] = field(default_factory=dict)
+    
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'Project':
+        """Create a Project from a dictionary."""
+        start_date = parse_date(data.get('start_date'))
+        target_end_date = parse_date(data.get('target_end_date'))
+        created_at = parse_date(data.get('created_at'))
+        updated_at = parse_date(data.get('updated_at'))
+        
+        # Parse milestone data
+        milestones = []
+        for milestone_data in data.get('milestones', []):
+            try:
+                milestones.append(Milestone.from_dict(milestone_data))
+            except Exception as e:
+                import logging
+                logging.error(f"Error parsing milestone: {str(e)}")
+                continue
+        
+        # Parse task reference data
+        tasks = []
+        for task_data in data.get('tasks', []):
+            try:
+                tasks.append(ProjectTask.from_dict(task_data))
+            except Exception as e:
+                import logging
+                logging.error(f"Error parsing project task: {str(e)}")
+                continue
+        
+        # Parse dependency data
+        dependencies = []
+        for dep_data in data.get('dependencies', []):
+            try:
+                dependencies.append(Dependency.from_dict(dep_data))
+            except Exception as e:
+                import logging
+                logging.error(f"Error parsing dependency: {str(e)}")
+                continue
+        
+        # Parse team member data
+        team_members = []
+        for member_data in data.get('team_members', []):
+            try:
+                team_members.append(TeamMember.from_dict(member_data))
+            except Exception as e:
+                import logging
+                logging.error(f"Error parsing team member: {str(e)}")
+                continue
+        
+        return cls(
+            id=data.get('id', ''),
+            name=data.get('name', ''),
+            description=data.get('description', ''),
+            status=data.get('status', 'active'),
+            start_date=start_date or datetime.now(),
+            target_end_date=target_end_date or datetime.now(),
+            manager_id=data.get('manager_id', ''),
+            completion_percentage=data.get('completion_percentage', 0.0),
+            created_at=created_at or datetime.now(),
+            updated_at=updated_at,
+            milestones=milestones,
+            tasks=tasks,
+            dependencies=dependencies,
+            team_members=team_members,
+            metadata=data.get('metadata', {})
+        )

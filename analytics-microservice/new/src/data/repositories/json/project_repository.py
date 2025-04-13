@@ -30,9 +30,11 @@ class JsonProjectRepository(ProjectRepositoryPort):
         
         for project_id, project_data in raw_data.items():
             try:
-                # Add the ID to the project data
-                project_data_with_id = {**project_data, 'id': project_id}
-                projects[project_id] = Project.from_dict(project_data_with_id)
+                # Add the ID to the project data if not present
+                if 'id' not in project_data:
+                    project_data['id'] = project_id
+                    
+                projects[project_id] = Project.from_dict(project_data)
             except Exception as e:
                 # Skip invalid projects but log the error
                 import logging
@@ -56,8 +58,10 @@ class JsonProjectRepository(ProjectRepositoryPort):
         
         # Add the ID to the project data
         project_data = raw_data[project_id]
-        project_data_with_id = {**project_data, 'id': project_id}
-        return Project.from_dict(project_data_with_id)
+        if 'id' not in project_data:
+            project_data['id'] = project_id
+            
+        return Project.from_dict(project_data)
     
     def get_projects_by_manager(self, manager_id: str) -> List[Project]:
         """Get projects by manager ID.
@@ -71,3 +75,24 @@ class JsonProjectRepository(ProjectRepositoryPort):
         all_projects = self.get_all_projects()
         return [project for project in all_projects.values() 
                 if project.manager_id == manager_id]
+    
+    def get_projects_by_team_member(self, user_id: str) -> List[Project]:
+        """Get projects by team member.
+        
+        Args:
+            user_id: ID of the team member
+            
+        Returns:
+            List of projects the user is a member of
+        """
+        all_projects = self.get_all_projects()
+        result = []
+        
+        for project in all_projects.values():
+            # Check if user is a team member of this project
+            for team_member in project.team_members:
+                if team_member.user_id == user_id:
+                    result.append(project)
+                    break
+                        
+        return result

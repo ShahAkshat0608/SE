@@ -3,344 +3,409 @@
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional
+from collections import defaultdict, Counter  # Add this import
+import calendar
 
 from src.core.domain.models import Task, Project, User
 
 
 class AnalyticsStrategy(ABC):
-    """Base strategy interface for analytics calculations."""
+    """Abstract base class for analytics strategies."""
     
     @abstractmethod
     def calculate(self, **kwargs) -> Dict[str, Any]:
-        """Calculate analytics metrics."""
+        """Perform analytics calculation."""
         pass
 
 
 class TaskCompletionRateStrategy(AnalyticsStrategy):
-    """Strategy for calculating task completion rates."""
+    """Strategy for calculating task completion rate."""
     
-    def calculate(self, tasks: List[Task], time_period_days: int = 30) -> Dict[str, Any]:
-        """Calculate the task completion rate over a given time period.
+    def calculate(self, **kwargs) -> Dict[str, Any]:
+        """Calculate task completion rate.
         
         Args:
-            tasks: List of tasks to analyze
+            tasks: List of tasks
             time_period_days: Number of days to look back
             
         Returns:
             Dict with completion rate statistics
         """
-        # Filter for tasks within the time period
+        tasks = kwargs.get('tasks', [])
+        time_period_days = kwargs.get('time_period_days', 30)
+        
+        if not tasks:
+            return self._create_empty_result(time_period_days)
+            
+        # Calculate time period
         cutoff_date = datetime.now() - timedelta(days=time_period_days)
         
-        # Filter and count tasks
-        tasks_in_period = [task for task in tasks if task.created_at and task.created_at >= cutoff_date]
-        completed_tasks = [task for task in tasks_in_period if task.completed]
+        # Filter tasks created within time period
+        recent_tasks = [t for t in tasks if t.created_at >= cutoff_date]
         
-        total_count = len(tasks_in_period)
-        completed_count = len(completed_tasks)
+        total_tasks = len(recent_tasks)
+        completed_tasks = len([t for t in recent_tasks if t.completed])
+        pending_tasks = total_tasks - completed_tasks
         
-        # Calculate stats
-        completion_rate = (completed_count / total_count) * 100 if total_count > 0 else 0
+        # Calculate completion rate percentage
+        completion_rate = (completed_tasks / total_tasks * 100) if total_tasks > 0 else 0
         
         return {
             "time_period_days": time_period_days,
-            "total_tasks": total_count,
-            "completed_tasks": completed_count,
-            "pending_tasks": total_count - completed_count,
+            "total_tasks": total_tasks,
+            "completed_tasks": completed_tasks,
+            "pending_tasks": pending_tasks,
             "completion_rate_percentage": round(completion_rate, 2)
+        }
+    
+    def _create_empty_result(self, time_period_days: int) -> Dict[str, Any]:
+        """Create an empty result structure."""
+        return {
+            "time_period_days": time_period_days,
+            "total_tasks": 0,
+            "completed_tasks": 0,
+            "pending_tasks": 0,
+            "completion_rate_percentage": 0
         }
 
 
 class PendingWorkAnalysisStrategy(AnalyticsStrategy):
     """Strategy for analyzing pending work."""
     
-    def calculate(self, tasks: List[Task]) -> Dict[str, Any]:
-        """Analyze pending work items.
+    def calculate(self, **kwargs) -> Dict[str, Any]:
+        """Calculate pending work metrics.
         
         Args:
-            tasks: List of tasks to analyze
+            tasks: List of tasks
             
         Returns:
-            Dict with pending work statistics
+            Dict with pending work metrics
         """
-        # Filter for pending tasks
-        pending_tasks = [task for task in tasks if not task.completed]
+        tasks = kwargs.get('tasks', [])
         
-        if not pending_tasks:
-            return {
-                "total_pending": 0,
-                "by_priority": {},
-                "overdue_tasks": 0,
-                "overdue_percentage": 0,
-                "average_days_pending": 0
-            }
+        if not tasks:
+            return self._create_empty_result()
+            
+        # Filter for pending tasks
+        pending_tasks = [t for t in tasks if not t.completed]
+        total_pending = len(pending_tasks)
+        
+        if total_pending == 0:
+            return self._create_empty_result()
         
         # Group by priority
-        priority_counts = {}
+        by_priority = defaultdict(int)
         for task in pending_tasks:
-            if task.priority:
-                if task.priority not in priority_counts:
-                    priority_counts[task.priority] = 0
-                priority_counts[task.priority] += 1
+            by_priority[task.priority] += 1
         
-        # Calculate tasks past due date
+        # Calculate overdue tasks
         now = datetime.now()
-        overdue_tasks = [task for task in pending_tasks 
-                        if task.due_date and task.due_date < now]
+        overdue_tasks = [t for t in pending_tasks if t.due_date and t.due_date < now]
+        overdue_count = len(overdue_tasks)
+        
+        # Calculate overdue percentage
+        overdue_percentage = (overdue_count / total_pending * 100) if total_pending > 0 else 0
         
         # Calculate average days pending
-        total_days = sum((datetime.now() - task.created_at).days for task in pending_tasks if task.created_at)
-        avg_days_pending = total_days / len(pending_tasks) if pending_tasks else 0
-        
-        overdue_percentage = (len(overdue_tasks) / len(pending_tasks) * 100) if pending_tasks else 0
+        days_pending_sum = sum((now - t.created_at).days for t in pending_tasks)
+        avg_days_pending = days_pending_sum / total_pending if total_pending > 0 else 0
         
         return {
-            "total_pending": len(pending_tasks),
-            "by_priority": priority_counts,
-            "overdue_tasks": len(overdue_tasks),
+            "total_pending": total_pending,
+            "by_priority": dict(by_priority),
+            "overdue_tasks": overdue_count,
             "overdue_percentage": round(overdue_percentage, 2),
-            "average_days_pending": round(avg_days_pending, 1)
+            "average_days_pending": round(avg_days_pending, 2)
+        }
+    
+    def _create_empty_result(self) -> Dict[str, Any]:
+        """Create an empty result structure."""
+        return {
+            "total_pending": 0,
+            "by_priority": {},
+            "overdue_tasks": 0,
+            "overdue_percentage": 0,
+            "average_days_pending": 0
         }
 
 
 class ProductivityMetricsStrategy(AnalyticsStrategy):
     """Strategy for calculating productivity metrics."""
     
-    def calculate(self, tasks: List[Task], time_period_days: int = 30) -> Dict[str, Any]:
+    def calculate(self, **kwargs) -> Dict[str, Any]:
         """Calculate productivity metrics.
         
         Args:
-            tasks: List of tasks to analyze
+            tasks: List of tasks
             time_period_days: Number of days to look back
             
         Returns:
             Dict with productivity metrics
         """
-        # Filter for completed tasks within time period
-        cutoff_date = datetime.now() - timedelta(days=time_period_days)
-        completed_tasks = [task for task in tasks 
-                          if task.completed and task.created_at and task.created_at >= cutoff_date]
+        tasks = kwargs.get('tasks', [])
+        time_period_days = kwargs.get('time_period_days', 30)
         
-        if not completed_tasks:
-            return {
-                "time_period_days": time_period_days,
-                "tasks_completed": 0,
-                "avg_completion_time_hours": 0,
-                "daily_completion": {},
-                "weekly_trends": {},
-                "average_daily_completion": 0
-            }
-        
-        # Calculate metrics by day
-        daily_counts = {}
-        for task in completed_tasks:
-            if not task.completed_at:
-                continue
-                
-            completed_date = task.completed_at.date()
-            date_str = completed_date.isoformat()
-            if date_str not in daily_counts:
-                daily_counts[date_str] = 0
-            daily_counts[date_str] += 1
+        if not tasks:
+            return self._create_empty_result(time_period_days)
             
-        # Calculate completion time
+        # Calculate time period
+        cutoff_date = datetime.now() - timedelta(days=time_period_days)
+        
+        # Filter for completed tasks within time period
+        completed_tasks = [
+            t for t in tasks 
+            if t.completed and t.completed_at and t.completed_at >= cutoff_date
+        ]
+        
+        tasks_completed = len(completed_tasks)
+        
+        if tasks_completed == 0:
+            return self._create_empty_result(time_period_days)
+        
+        # Calculate average completion time
         completion_times = []
         for task in completed_tasks:
-            if not (task.created_at and task.completed_at):
-                continue
-                
-            # Calculate hours to complete
-            completion_time = (task.completed_at - task.created_at).total_seconds() / 3600
-            completion_times.append(completion_time)
+            if task.created_at and task.completed_at:
+                diff = task.completed_at - task.created_at
+                hours = diff.total_seconds() / 3600
+                completion_times.append(hours)
         
         avg_completion_time = sum(completion_times) / len(completion_times) if completion_times else 0
         
-        # Calculate weekly trends
-        weekly_counts = {}
+        # Group by day
+        daily_completion = defaultdict(int)
         for task in completed_tasks:
-            if not task.completed_at:
-                continue
-                
-            completed_date = task.completed_at
-            week_num = completed_date.isocalendar()[1]  # ISO week number
-            year = completed_date.year
-            week_key = f"{year}-W{week_num:02d}"
-            if week_key not in weekly_counts:
-                weekly_counts[week_key] = 0
-            weekly_counts[week_key] += 1
+            if task.completed_at:
+                day_key = task.completed_at.date().isoformat()
+                daily_completion[day_key] += 1
+        
+        # Group by week
+        weekly_trends = defaultdict(int)
+        for task in completed_tasks:
+            if task.completed_at:
+                year, week_num, _ = task.completed_at.isocalendar()
+                week_key = f"{year}-W{week_num:02d}"
+                weekly_trends[week_key] += 1
         
         # Calculate average daily completion
-        avg_daily = len(completed_tasks) / min(time_period_days, 30)
+        days_in_period = min(time_period_days, len(daily_completion) or 1)
+        avg_daily = tasks_completed / days_in_period
         
         return {
             "time_period_days": time_period_days,
-            "tasks_completed": len(completed_tasks),
+            "tasks_completed": tasks_completed,
             "avg_completion_time_hours": round(avg_completion_time, 2),
-            "daily_completion": daily_counts,
-            "weekly_trends": weekly_counts,
+            "daily_completion": dict(daily_completion),
+            "weekly_trends": dict(weekly_trends),
             "average_daily_completion": round(avg_daily, 2)
+        }
+    
+    def _create_empty_result(self, time_period_days: int) -> Dict[str, Any]:
+        """Create an empty result structure."""
+        return {
+            "time_period_days": time_period_days,
+            "tasks_completed": 0,
+            "avg_completion_time_hours": 0,
+            "daily_completion": {},
+            "weekly_trends": {},
+            "average_daily_completion": 0
         }
 
 
 class TeamWorkloadStrategy(AnalyticsStrategy):
     """Strategy for analyzing team workload distribution."""
     
-    def calculate(self, tasks: List[Task], users: Dict[str, User]) -> Dict[str, Any]:
-        """Analyze workload distribution among team members.
+    def calculate(self, **kwargs) -> Dict[str, Any]:
+        """Calculate team workload metrics.
         
         Args:
-            tasks: List of tasks to analyze
-            users: Dict of users keyed by user ID
+            tasks: List of tasks
+            users: Dictionary of users keyed by ID
             
         Returns:
-            Dict with workload metrics
+            Dict with team workload metrics
         """
-        # Group tasks by assigned user
-        user_tasks = {}
-        for task in tasks:
-            if not task.assigned_to:
-                continue
-                
-            user_id = task.assigned_to
-            if user_id not in user_tasks:
-                user_tasks[user_id] = []
-            user_tasks[user_id].append(task)
+        tasks = kwargs.get('tasks', [])
+        users = kwargs.get('users', {})
         
-        # Calculate workload metrics for each user
-        user_metrics = {}
-        for user_id, user_task_list in user_tasks.items():
-            # Skip users not in the provided users dict
-            if user_id not in users:
+        if not tasks or not users:
+            return self._create_empty_result()
+            
+        result = {
+            "total_users": len(users),
+            "total_tasks": len(tasks),
+            "total_pending_tasks": len([t for t in tasks if not t.completed]),
+            "user_metrics": {},
+            "most_overloaded_user": None,
+            "least_loaded_user": None,
+            "workload_distribution": {}
+        }
+        
+        # Calculate per-user metrics
+        max_workload = 0
+        min_workload = float('inf')
+        
+        for user_id, user in users.items():
+            # Get tasks assigned to this user
+            user_tasks = [t for t in tasks if t.assigned_to == user_id]
+            
+            if not user_tasks:
                 continue
                 
-            user = users[user_id]
-            completed = [t for t in user_task_list if t.completed]
-            pending = [t for t in user_task_list if not t.completed]
+            user_completed_tasks = [t for t in user_tasks if t.completed]
+            user_pending_tasks = [t for t in user_tasks if not t.completed]
             
-            # Calculate estimated remaining hours
-            estimated_remaining_hours = sum(t.estimated_hours or 0 for t in pending)
-            
-            # Calculate workload percentage based on capacity
-            workload_capacity = getattr(user, 'workload_capacity', 40)  # Default to 40 hours if not specified
-            workload_percentage = (estimated_remaining_hours / workload_capacity * 100) if workload_capacity > 0 else 0
+            # Calculate workload using estimated_hours if available
+            estimated_hours = sum(getattr(t, 'estimated_hours', 0) or 0 for t in user_pending_tasks)
+            workload_capacity = getattr(user, 'workload_capacity', 40.0)
+            workload_percentage = (estimated_hours / workload_capacity * 100) if workload_capacity > 0 else 0
             
             # Calculate completion rate
-            completion_rate = (len(completed) / len(user_task_list) * 100) if user_task_list else 0
+            completion_rate = (len(user_completed_tasks) / len(user_tasks) * 100) if user_tasks else 0
             
-            user_metrics[user_id] = {
+            # Store user metrics
+            result["user_metrics"][user_id] = {
                 "name": user.name,
                 "role": getattr(user, 'role', 'Unknown'),
-                "total_tasks": len(user_task_list),
-                "completed_tasks": len(completed),
-                "pending_tasks": len(pending),
-                "estimated_remaining_hours": estimated_remaining_hours,
+                "total_tasks": len(user_tasks),
+                "completed_tasks": len(user_completed_tasks),
+                "pending_tasks": len(user_pending_tasks),
+                "estimated_remaining_hours": estimated_hours,
                 "workload_percentage": round(workload_percentage, 2),
                 "completion_rate": round(completion_rate, 2)
             }
-        
-        # Calculate overall metrics
-        total_tasks = sum(len(tasks) for tasks in user_tasks.values())
-        total_pending = sum(m["pending_tasks"] for m in user_metrics.values())
-        
-        # Find most overloaded and underutilized team members
-        sorted_by_workload = sorted(
-            user_metrics.items(), 
-            key=lambda x: x[1]["workload_percentage"], 
-            reverse=True
-        )
-        
-        most_overloaded = sorted_by_workload[0][0] if sorted_by_workload else None
-        least_loaded = sorted_by_workload[-1][0] if len(sorted_by_workload) > 1 else None
-        
+            
+            # Track workload distribution
+            result["workload_distribution"][user_id] = round(workload_percentage, 2)
+            
+            # Track most/least loaded users
+            if workload_percentage > max_workload and len(user_tasks) > 0:
+                max_workload = workload_percentage
+                result["most_overloaded_user"] = user_id
+                
+            if workload_percentage < min_workload and len(user_tasks) > 0:
+                min_workload = workload_percentage
+                result["least_loaded_user"] = user_id
+                
+        return result
+    
+    def _create_empty_result(self) -> Dict[str, Any]:
+        """Create an empty result structure."""
         return {
-            "total_users": len(user_metrics),
-            "total_tasks": total_tasks,
-            "total_pending_tasks": total_pending,
-            "user_metrics": user_metrics,
-            "most_overloaded_user": most_overloaded,
-            "least_loaded_user": least_loaded,
-            "workload_distribution": {
-                user_id: metrics["workload_percentage"] 
-                for user_id, metrics in user_metrics.items()
-            }
+            "total_users": 0,
+            "total_tasks": 0,
+            "total_pending_tasks": 0,
+            "user_metrics": {},
+            "most_overloaded_user": None,
+            "least_loaded_user": None,
+            "workload_distribution": {}
         }
 
 
 class ProjectProgressStrategy(AnalyticsStrategy):
     """Strategy for analyzing project progress."""
     
-    def calculate(self, project: Project, tasks: List[Task]) -> Dict[str, Any]:
-        """Analyze project progress.
+    def calculate(self, **kwargs) -> Dict[str, Any]:
+        """Calculate project progress metrics.
         
         Args:
-            project: The project to analyze
-            tasks: List of tasks related to the project
+            project: Project object
+            tasks: List of tasks for the project
             
         Returns:
             Dict with project progress metrics
         """
-        if not tasks:
-            return {
-                "project_id": project.id,
-                "project_name": project.name,
-                "total_tasks": 0,
-                "completion_percentage": 0,
-                "days_remaining": 0,
-                "milestone_status": {},
-                "on_track": False
-            }
+        project = kwargs.get('project')
+        tasks = kwargs.get('tasks', [])
         
-        # Calculate task completion metrics
+        if not project or not tasks:
+            return self._create_empty_result(
+                project_id=getattr(project, 'id', '') if project else '',
+                project_name=getattr(project, 'name', '') if project else ''
+            )
+        
         total_tasks = len(tasks)
-        completed_tasks = sum(1 for t in tasks if t.completed)
+        completed_tasks = len([t for t in tasks if t.completed])
+        pending_tasks = total_tasks - completed_tasks
+        
         completion_percentage = (completed_tasks / total_tasks * 100) if total_tasks > 0 else 0
         
         # Calculate days remaining until target end date
         days_remaining = 0
-        on_track = False
+        if hasattr(project, 'target_end_date'):
+            date_diff = project.target_end_date - datetime.now()
+            days_remaining = max(0, date_diff.days)
         
-        if project.target_end_date:
-            days_remaining = (project.target_end_date - datetime.now()).days
-            
-            # Calculate a simple "on track" metric
-            # Project is on track if completion percentage >= expected percentage based on timeline
-            if project.start_date:
-                total_project_days = (project.target_end_date - project.start_date).days
-                days_elapsed = (datetime.now() - project.start_date).days
-                
-                if total_project_days > 0:
-                    expected_completion = (days_elapsed / total_project_days * 100)
-                    on_track = completion_percentage >= expected_completion
-        
-        # Calculate milestone status
+        # Analyze milestone status
         milestone_status = {}
         for milestone in project.milestones:
-            if not milestone.due_date:
-                continue
-                
+            is_overdue = not milestone.completed and milestone.due_date < datetime.now()
             milestone_status[milestone.id] = {
                 "name": milestone.name,
+                "description": milestone.description,
                 "completed": milestone.completed,
-                "due_date": milestone.due_date.isoformat(),
-                "overdue": milestone.due_date < datetime.now() and not milestone.completed
+                "due_date": milestone.due_date.isoformat() if milestone.due_date else None,
+                "overdue": is_overdue
             }
         
-        # Collect tasks by priority
-        tasks_by_priority = {}
+        # Determine if project is on track
+        on_track = True
+        if hasattr(project, 'start_date') and hasattr(project, 'target_end_date'):
+            total_project_days = (project.target_end_date - project.start_date).days
+            days_elapsed = (datetime.now() - project.start_date).days
+            
+            if total_project_days > 0 and days_elapsed > 0:
+                expected_completion = (days_elapsed / total_project_days) * 100
+                on_track = completion_percentage >= (expected_completion * 0.9)  # 10% buffer
+        
+        # Group tasks by priority
+        tasks_by_priority = defaultdict(int)
         for task in tasks:
-            if task.priority not in tasks_by_priority:
-                tasks_by_priority[task.priority] = 0
             tasks_by_priority[task.priority] += 1
+        
+        # Get team information
+        team_info = []
+        for team_member in project.team_members:
+            team_info.append({
+                "id": team_member.id,
+                "user_id": team_member.user_id,
+                "role": team_member.role
+            })
         
         return {
             "project_id": project.id,
             "project_name": project.name,
+            "description": project.description,
+            "status": project.status,
+            "manager_id": project.manager_id,
             "total_tasks": total_tasks,
             "completed_tasks": completed_tasks,
-            "pending_tasks": total_tasks - completed_tasks,
+            "pending_tasks": pending_tasks,
             "completion_percentage": round(completion_percentage, 2),
-            "days_remaining": max(0, days_remaining),
+            "days_remaining": days_remaining,
             "milestone_status": milestone_status,
             "on_track": on_track,
-            "tasks_by_priority": tasks_by_priority
+            "tasks_by_priority": dict(tasks_by_priority),
+            "team_members": team_info,
+            "metadata": project.metadata
+        }
+    
+    def _create_empty_result(self, project_id: str, project_name: str) -> Dict[str, Any]:
+        """Create an empty result structure."""
+        return {
+            "project_id": project_id,
+            "project_name": project_name,
+            "description": "",
+            "status": "unknown",
+            "manager_id": "",
+            "total_tasks": 0,
+            "completed_tasks": 0,
+            "pending_tasks": 0,
+            "completion_percentage": 0,
+            "days_remaining": 0,
+            "milestone_status": {},
+            "on_track": True,
+            "tasks_by_priority": {},
+            "team_members": [],
+            "metadata": {}
         }
