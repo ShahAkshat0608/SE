@@ -3,7 +3,7 @@
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional
-from collections import defaultdict, Counter  # Add this import
+from collections import defaultdict, Counter
 import calendar
 
 from src.core.domain.models import Task, Project, User
@@ -363,14 +363,23 @@ class ProjectProgressStrategy(AnalyticsStrategy):
         for task in tasks:
             tasks_by_priority[task.priority] += 1
         
-        # Get team information
-        team_info = []
-        for team_member in project.team_members:
-            team_info.append({
-                "id": team_member.id,
-                "user_id": team_member.user_id,
-                "role": team_member.role
-            })
+        # Get teams information
+        teams_info = []
+        for team in project.teams:
+            team_info = {
+                "id": team.id,
+                "name": team.name,
+                "member_count": len(team.team_members),
+                "members": [
+                    {
+                        "id": member.id,
+                        "user_id": member.user_id,
+                        "role": member.role
+                    }
+                    for member in team.team_members
+                ]
+            }
+            teams_info.append(team_info)
         
         return {
             "project_id": project.id,
@@ -386,7 +395,7 @@ class ProjectProgressStrategy(AnalyticsStrategy):
             "milestone_status": milestone_status,
             "on_track": on_track,
             "tasks_by_priority": dict(tasks_by_priority),
-            "team_members": team_info,
+            "teams": teams_info,
             "metadata": project.metadata
         }
     
@@ -406,6 +415,6 @@ class ProjectProgressStrategy(AnalyticsStrategy):
             "milestone_status": {},
             "on_track": True,
             "tasks_by_priority": {},
-            "team_members": [],
+            "teams": [],
             "metadata": {}
         }

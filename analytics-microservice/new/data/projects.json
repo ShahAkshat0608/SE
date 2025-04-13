@@ -1,175 +1,196 @@
 {
-    "project-001": {
-      "id": "project-001",
-      "name": "Website Redesign",
-      "description": "Complete overhaul of the company website with new brand identity",
-      "status": "active",
-      "start_date": "2023-01-15T00:00:00",
-      "target_end_date": "2023-04-30T00:00:00",
-      "manager_id": "user-103",
-      "completion_percentage": 45.5,
-      "created_at": "2023-01-10T14:25:30",
-      "updated_at": "2023-03-05T09:12:18",
-      "milestones": [
-        {
-          "id": "milestone-101",
-          "name": "Design Phase Complete",
-          "description": "Finalize all design assets and get approval",
-          "due_date": "2023-02-15T00:00:00",
-          "completed": true,
-          "created_at": "2023-01-10T14:30:00",
-          "updated_at": "2023-02-16T10:20:15"
-        },
-        {
-          "id": "milestone-102",
-          "name": "Development Complete",
-          "description": "Finish all coding and prepare for testing",
-          "due_date": "2023-03-30T00:00:00",
-          "completed": false,
-          "created_at": "2023-01-10T14:32:00",
-          "updated_at": "2023-01-10T14:32:00"
-        }
-      ],
-      "tasks": [
-        {
-          "project_id": "project-001",
-          "id": "task-501",
-          "order": 1,
-          "created_at": "2023-01-12T09:00:00"
-        },
-        {
-          "project_id": "project-001",
-          "id": "task-502",
-          "order": 2,
-          "created_at": "2023-01-12T09:05:00"
-        },
-        {
-          "project_id": "project-001",
-          "id": "task-504",
-          "order": 3,
-          "created_at": "2023-01-15T11:30:00"
-        },
-        {
-          "project_id": "project-001",
-          "id": "task-505",
-          "order": 4,
-          "created_at": "2023-01-15T11:35:00"
-        }
-      ],
-      "dependencies": [
-        {
-          "id": "dep-301",
-          "source_id": "task-501",
-          "target_id": "task-502",
-          "source_type": "task",
-          "target_type": "task",
-          "created_at": "2023-01-12T09:10:00"
-        },
-        {
-          "id": "dep-302",
-          "source_id": "task-502",
-          "target_id": "milestone-102",
-          "source_type": "task",
-          "target_type": "milestone",
-          "created_at": "2023-01-12T09:12:00"
-        }
-      ],
-      "team_members": [
-        {
-          "id": "member-401",
-          "user_id": "user-103",
-          "role": "admin",
-          "created_at": "2023-01-10T14:25:30"
-        },
-        {
-          "id": "member-402",
-          "user_id": "user-105",
-          "role": "team_member",
-          "created_at": "2023-01-11T10:15:00"
-        },
-        {
-          "id": "member-403",
-          "user_id": "user-101",
-          "role": "team_member",
-          "created_at": "2023-01-20T16:45:00"
-        },
-        {
-          "id": "member-404",
-          "user_id": "user-102",
-          "role": "team_member",
-          "created_at": "2023-01-20T16:50:00"
-        },
-        {
-          "id": "member-405",
-          "user_id": "user-104",
-          "role": "team_member",
-          "created_at": "2023-01-20T16:55:00"
-        }
-      ],
-      "metadata": {
-        "priority": "high",
-        "client": "internal",
-        "department": "marketing"
+  "project-001": {
+    "id": "project-001",
+    "name": "Website Redesign",
+    "description": "Complete overhaul of the company website with new brand identity",
+    "status": "active",
+    "start_date": "2023-01-15T00:00:00",
+    "target_end_date": "2023-04-30T00:00:00",
+    "manager_id": "user-103",
+    "completion_percentage": 45.5,
+    "created_at": "2023-01-10T14:25:30",
+    "updated_at": "2023-03-05T09:12:18",
+    "milestones": [
+      {
+        "id": "milestone-101",
+        "name": "Design Phase Complete",
+        "description": "Finalize all design assets and get approval",
+        "due_date": "2023-02-15T00:00:00",
+        "completed": true,
+        "created_at": "2023-01-10T14:30:00",
+        "updated_at": "2023-02-16T10:20:15"
+      },
+      {
+        "id": "milestone-102",
+        "name": "Development Complete",
+        "description": "Finish all coding and prepare for testing",
+        "due_date": "2023-03-30T00:00:00",
+        "completed": false,
+        "created_at": "2023-01-10T14:32:00",
+        "updated_at": "2023-01-10T14:32:00"
       }
-    },
-    "project-002": {
-      "id": "project-002",
-      "name": "API Integration",
-      "description": "Integrate with third-party payment and shipping APIs",
-      "status": "active",
-      "start_date": "2023-02-10T00:00:00",
-      "target_end_date": "2023-05-15T00:00:00",
-      "manager_id": "user-103",
-      "completion_percentage": 30.0,
-      "created_at": "2023-02-05T10:00:00",
-      "updated_at": "2023-03-20T14:30:00",
-      "milestones": [
-        {
-          "id": "milestone-201",
-          "name": "Documentation Review",
-          "description": "Review all API documentation and requirements",
-          "due_date": "2023-02-20T00:00:00",
-          "completed": true,
-          "created_at": "2023-02-05T10:05:00",
-          "updated_at": "2023-02-18T16:20:00"
-        },
-        {
-          "id": "milestone-202",
-          "name": "Integration Complete",
-          "description": "Complete all API integrations and error handling",
-          "due_date": "2023-04-30T00:00:00",
-          "completed": false,
-          "created_at": "2023-02-05T10:10:00",
-          "updated_at": "2023-02-05T10:10:00"
-        }
-      ],
-      "tasks": [
-        {
-          "project_id": "project-002",
-          "id": "task-503",
-          "order": 1,
-          "created_at": "2023-02-10T09:00:00"
-        }
-      ],
-      "dependencies": [],
-      "team_members": [
-        {
-          "id": "member-501",
-          "user_id": "user-103",
-          "role": "admin",
-          "created_at": "2023-02-05T10:00:00"
-        },
-        {
-          "id": "member-502",
-          "user_id": "user-101",
-          "role": "team_member",
-          "created_at": "2023-02-05T10:05:00"
-        }
-      ],
-      "metadata": {
-        "priority": "medium",
-        "client": "internal",
-        "department": "engineering"
+    ],
+    "tasks": [
+      {
+        "project_id": "project-001",
+        "id": "task-501",
+        "order": 1,
+        "created_at": "2023-01-12T09:00:00"
+      },
+      {
+        "project_id": "project-001",
+        "id": "task-502",
+        "order": 2,
+        "created_at": "2023-01-12T09:05:00"
+      },
+      {
+        "project_id": "project-001",
+        "id": "task-504",
+        "order": 3,
+        "created_at": "2023-01-15T11:30:00"
+      },
+      {
+        "project_id": "project-001",
+        "id": "task-505",
+        "order": 4,
+        "created_at": "2023-01-15T11:35:00"
       }
+    ],
+    "dependencies": [
+      {
+        "id": "dep-301",
+        "source_id": "task-501",
+        "target_id": "task-502",
+        "source_type": "task",
+        "target_type": "task",
+        "created_at": "2023-01-12T09:10:00"
+      },
+      {
+        "id": "dep-302",
+        "source_id": "task-502",
+        "target_id": "milestone-102",
+        "source_type": "task",
+        "target_type": "milestone",
+        "created_at": "2023-01-12T09:12:00"
+      }
+    ],
+    "teams": [
+      {
+        "id": "team-001",
+        "name": "Design Team",
+        "created_at": "2023-01-10T14:25:30",
+        "team_members": [
+          {
+            "id": "member-401",
+            "user_id": "user-103",
+            "role": "admin",
+            "created_at": "2023-01-10T14:25:30"
+          },
+          {
+            "id": "member-402",
+            "user_id": "user-105",
+            "role": "team_member",
+            "created_at": "2023-01-11T10:15:00"
+          }
+        ]
+      },
+      {
+        "id": "team-002",
+        "name": "Development Team",
+        "created_at": "2023-01-20T16:45:00",
+        "team_members": [
+          {
+            "id": "member-403",
+            "user_id": "user-101",
+            "role": "team_member",
+            "created_at": "2023-01-20T16:45:00"
+          },
+          {
+            "id": "member-404",
+            "user_id": "user-102",
+            "role": "team_member",
+            "created_at": "2023-01-20T16:50:00"
+          },
+          {
+            "id": "member-405",
+            "user_id": "user-104",
+            "role": "team_member",
+            "created_at": "2023-01-20T16:55:00"
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "priority": "high",
+      "client": "internal",
+      "department": "marketing"
+    }
+  },
+  "project-002": {
+    "id": "project-002",
+    "name": "API Integration",
+    "description": "Integrate with third-party payment and shipping APIs",
+    "status": "active",
+    "start_date": "2023-02-10T00:00:00",
+    "target_end_date": "2023-05-15T00:00:00",
+    "manager_id": "user-103",
+    "completion_percentage": 30.0,
+    "created_at": "2023-02-05T10:00:00",
+    "updated_at": "2023-03-20T14:30:00",
+    "milestones": [
+      {
+        "id": "milestone-201",
+        "name": "Documentation Review",
+        "description": "Review all API documentation and requirements",
+        "due_date": "2023-02-20T00:00:00",
+        "completed": true,
+        "created_at": "2023-02-05T10:05:00",
+        "updated_at": "2023-02-18T16:20:00"
+      },
+      {
+        "id": "milestone-202",
+        "name": "Integration Complete",
+        "description": "Complete all API integrations and error handling",
+        "due_date": "2023-04-30T00:00:00",
+        "completed": false,
+        "created_at": "2023-02-05T10:10:00",
+        "updated_at": "2023-02-05T10:10:00"
+      }
+    ],
+    "tasks": [
+      {
+        "project_id": "project-002",
+        "id": "task-503",
+        "order": 1,
+        "created_at": "2023-02-10T09:00:00"
+      }
+    ],
+    "dependencies": [],
+    "teams": [
+      {
+        "id": "team-003",
+        "name": "API Team",
+        "created_at": "2023-02-05T10:00:00",
+        "team_members": [
+          {
+            "id": "member-501",
+            "user_id": "user-103",
+            "role": "admin",
+            "created_at": "2023-02-05T10:00:00"
+          },
+          {
+            "id": "member-502",
+            "user_id": "user-101",
+            "role": "team_member",
+            "created_at": "2023-02-05T10:05:00"
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "priority": "medium",
+      "client": "internal",
+      "department": "engineering"
     }
   }
+}

@@ -1,7 +1,7 @@
 """Domain models for the analytics microservice."""
 
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Dict, List, Optional, Any
 
 
@@ -58,6 +58,7 @@ class Task:
     completed_at: Optional[datetime] = None
     assigned_to: Optional[str] = None
     estimated_hours: Optional[float] = None
+    tags: List[str] = field(default_factory=list)
     
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'Task':
@@ -76,7 +77,8 @@ class Task:
             completed=data.get('completed', False),
             completed_at=completed_at,
             assigned_to=data.get('assigned_to'),
-            estimated_hours=data.get('estimated_hours')
+            estimated_hours=data.get('estimated_hours'),
+            tags=data.get('tags', [])
         )
 
 
@@ -181,6 +183,38 @@ class TeamMember:
 
 
 @dataclass
+class Team:
+    """Team entity representing a group of team members."""
+    
+    id: str
+    name: str
+    created_at: datetime = field(default_factory=datetime.now)
+    team_members: List[TeamMember] = field(default_factory=list)
+    
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'Team':
+        """Create a Team from a dictionary."""
+        created_at = parse_date(data.get('created_at'))
+        
+        # Parse team member data
+        team_members = []
+        for member_data in data.get('team_members', []):
+            try:
+                team_members.append(TeamMember.from_dict(member_data))
+            except Exception as e:
+                import logging
+                logging.error(f"Error parsing team member: {str(e)}")
+                continue
+                
+        return cls(
+            id=data.get('id', ''),
+            name=data.get('name', ''),
+            created_at=created_at or datetime.now(),
+            team_members=team_members
+        )
+
+
+@dataclass
 class Project:
     """Project entity representing a collection of tasks."""
     
@@ -197,7 +231,7 @@ class Project:
     milestones: List[Milestone] = field(default_factory=list)
     tasks: List[ProjectTask] = field(default_factory=list)
     dependencies: List[Dependency] = field(default_factory=list)
-    team_members: List[TeamMember] = field(default_factory=list)
+    teams: List[Team] = field(default_factory=list)  # Changed from team_members to teams
     metadata: Dict[str, Any] = field(default_factory=dict)
     
     @classmethod
@@ -238,14 +272,14 @@ class Project:
                 logging.error(f"Error parsing dependency: {str(e)}")
                 continue
         
-        # Parse team member data
-        team_members = []
-        for member_data in data.get('team_members', []):
+        # Parse teams data
+        teams = []
+        for team_data in data.get('teams', []):
             try:
-                team_members.append(TeamMember.from_dict(member_data))
+                teams.append(Team.from_dict(team_data))
             except Exception as e:
                 import logging
-                logging.error(f"Error parsing team member: {str(e)}")
+                logging.error(f"Error parsing team: {str(e)}")
                 continue
         
         return cls(
@@ -262,6 +296,17 @@ class Project:
             milestones=milestones,
             tasks=tasks,
             dependencies=dependencies,
-            team_members=team_members,
+            teams=teams,
             metadata=data.get('metadata', {})
         )
+        
+    def get_all_team_members(self) -> List[TeamMember]:
+        """Get all team members across all teams in this project.
+        
+        Returns:
+            List of all team members
+        """
+        all_members = []
+        for team in self.teams:
+            all_members.extend(team.team_members)
+        return all_members
