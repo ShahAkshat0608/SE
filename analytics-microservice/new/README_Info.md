@@ -534,3 +534,5 @@ python -m src.cli.commands user user1 --project proj1
 ````
 python -m src.cli.commands report --type full --team team1
 ````
+
+- Ignore team level filters and team does not exist in db schema (project has user assigned not team)
