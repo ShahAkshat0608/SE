@@ -24,8 +24,9 @@ class TeamDAL:
         """Add a new team."""
         cursor = self.conn.cursor()
         cursor.execute(
-            "INSERT INTO teams (id, name, project_id, team_lead_id) VALUES (?, ?, ?, ?)",
-            (team["id"], team["name"], team["project_id"], team["team_lead_id"]),
+            "INSERT INTO teams (id, name, project_id, team_lead_id, type, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+            (team["id"], team["name"], team["project_id"], team["team_lead_id"], 
+            team.get("type"), team.get("created_at"))
         )
         self.conn.commit()
 
@@ -33,9 +34,18 @@ class TeamDAL:
         """Update an existing team."""
         cursor = self.conn.cursor()
         cursor.execute(
-            "UPDATE teams SET name = ?, project_id = ?, team_lead_id = ? WHERE id = ?",
-            (updated_team["name"], updated_team["project_id"], updated_team["team_lead_id"], team_id),
-        )
+            """UPDATE teams 
+            SET name = ?, project_id = ?, team_lead_id = ?, type = ?, created_at = ? 
+            WHERE id = ?""",
+            (
+                updated_team["name"], 
+                updated_team["project_id"], 
+                updated_team["team_lead_id"], 
+                updated_team.get("type"),
+                updated_team.get("created_at"),
+                team_id
+            ),
+        )    
         self.conn.commit()
 
     def delete_team(self, team_id: str):
@@ -53,7 +63,7 @@ class TeamDAL:
         )
         self.conn.commit()
     
-    def removeUserfromTeam(self , user_id: str, team_id: str):
+    def removeUserFromTeam(self , user_id: str, team_id: str):
         """Remove a user from a team."""
         cursor = self.conn.cursor()
         cursor.execute(
@@ -61,3 +71,13 @@ class TeamDAL:
             (user_id, team_id),
         )
         self.conn.commit()
+
+    def isUserInTeam(self, user_id: str, team_id: str) -> bool:
+        """Check if a user is already in a team."""
+        cursor = self.conn.cursor()
+        cursor.execute(
+            "SELECT COUNT(*) FROM team_members WHERE user_id = ? AND team_id = ?",
+            (user_id, team_id),
+        )
+        count = cursor.fetchone()[0]
+        return count > 0
