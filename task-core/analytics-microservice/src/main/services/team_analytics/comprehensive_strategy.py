@@ -1,26 +1,23 @@
-from typing import Dict, Any, List, Optional
-from data.data_access_test import TestDataAccess
-from data.cache import SimpleMemoryCache
+from typing import Dict, Any, List
 from models.response_models import TeamComprehensiveResponse, Recommendation
 from utils.analytics_utils import generate_team_recommendations
-from .progress import TeamProgressAnalytics
-from .workload import TeamWorkloadAnalytics
-from datetime import datetime
+from .team_analytics_strategy import TeamAnalyticsStrategy
+from .progress_strategy import ProgressAnalyticsStrategy
+from .workload_strategy import WorkloadAnalyticsStrategy
 
-class TeamComprehensiveAnalytics:
-    """Service for comprehensive team analytics"""
+class ComprehensiveAnalyticsStrategy(TeamAnalyticsStrategy[TeamComprehensiveResponse]):
+    """Strategy for comprehensive team analytics"""
     
     def __init__(self):
-        self.data_access = TestDataAccess()
-        self.cache = SimpleMemoryCache()
-        self.progress_analytics = TeamProgressAnalytics()
-        self.workload_analytics = TeamWorkloadAnalytics()
+        super().__init__()
+        self.progress_strategy = ProgressAnalyticsStrategy()
+        self.workload_strategy = WorkloadAnalyticsStrategy()
     
-    async def get_comprehensive_report(self, team_id: str, project_id: str) -> TeamComprehensiveResponse:
+    async def generate_report(self, team_id: str, project_id: str) -> TeamComprehensiveResponse:
         """Generate a comprehensive report for a team"""
         # Try to get from cache
         cache_key = f"team_comprehensive:{team_id}:{project_id}"
-        cached_report = await self.cache.get(cache_key)
+        cached_report = await self.get_cached_report(cache_key)
         if cached_report:
             return TeamComprehensiveResponse(**cached_report)
         
@@ -37,9 +34,9 @@ class TeamComprehensiveAnalytics:
                 workload_stats={}
             )
         
-        # Get progress and workload reports
-        progress_report = await self.progress_analytics.get_progress_report(team_id, project_id)
-        workload_report = await self.workload_analytics.get_workload_report(team_id, project_id)
+        # Get progress and workload reports using their respective strategies
+        progress_report = await self.progress_strategy.generate_report(team_id, project_id)
+        workload_report = await self.workload_strategy.generate_report(team_id, project_id)
         
         # Generate member reports
         member_reports = {}
@@ -107,6 +104,6 @@ class TeamComprehensiveAnalytics:
         )
         
         # Cache the response
-        await self.cache.set(cache_key, response.dict(), 300)  # Cache for 5 minutes
+        await self.cache_report(cache_key, response.dict())
         
         return response

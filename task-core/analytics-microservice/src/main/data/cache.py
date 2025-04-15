@@ -1,14 +1,48 @@
 from typing import Optional, Any
 import time
 import json
+from threading import Lock
 
 class SimpleMemoryCache:
     """
-    Simple in-memory cache implementation for development.
+    Simple in-memory cache implementation for development using Singleton pattern.
     In production, this would be replaced with Redis or another caching solution.
     """
+    # Class variables for singleton pattern
+    _instance = None
+    _lock = Lock()
+    
+    def __new__(cls):
+        """
+        Singleton implementation using __new__ to ensure only one instance exists.
+        Thread-safe with double-checked locking pattern.
+        """
+        with cls._lock:
+            if cls._instance is None:
+                cls._instance = super(SimpleMemoryCache, cls).__new__(cls)
+                # Initialize the instance
+                cls._instance._cache = {}
+                cls._instance._initialized = False
+        return cls._instance
+    
     def __init__(self):
-        self._cache = {}
+        """
+        Initialize the cache only once.
+        """
+        # Skip initialization if already done
+        if self._initialized:
+            return
+            
+        self._initialized = True
+    
+    @classmethod
+    def get_instance(cls):
+        """
+        Static access method to get the singleton instance.
+        """
+        if cls._instance is None:
+            cls()  # This will call __new__ and create the instance
+        return cls._instance
         
     async def get(self, key: str) -> Optional[Any]:
         """Get an item from cache"""

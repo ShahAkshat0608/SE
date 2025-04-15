@@ -1,26 +1,24 @@
-from typing import Dict, Any, List, Optional
-from data.data_access_test import TestDataAccess
-from data.cache import SimpleMemoryCache
+from typing import Dict, Any, List
 from datetime import datetime
 from models.response_models import ProjectComprehensiveResponse, TeamReport, ProjectHealth, Recommendation
 from utils.analytics_utils import assess_project_health
-from .progress import ProjectProgressAnalytics
-from .workload import ProjectWorkloadAnalytics
+from .project_analytics_strategy import ProjectAnalyticsStrategy
+from .progress_strategy import ProgressAnalyticsStrategy
+from .workload_strategy import WorkloadAnalyticsStrategy
 
-class ProjectComprehensiveAnalytics:
-    """Service for comprehensive project analytics"""
+class ComprehensiveAnalyticsStrategy(ProjectAnalyticsStrategy[ProjectComprehensiveResponse]):
+    """Strategy for comprehensive project analytics"""
     
     def __init__(self):
-        self.data_access = TestDataAccess()
-        self.cache = SimpleMemoryCache()
-        self.progress_analytics = ProjectProgressAnalytics()
-        self.workload_analytics = ProjectWorkloadAnalytics()
+        super().__init__()
+        self.progress_strategy = ProgressAnalyticsStrategy()
+        self.workload_strategy = WorkloadAnalyticsStrategy()
     
-    async def get_comprehensive_report(self, project_id: str) -> ProjectComprehensiveResponse:
+    async def generate_report(self, project_id: str) -> ProjectComprehensiveResponse:
         """Generate a comprehensive report for a project"""
         # Try to get from cache
         cache_key = f"project_comprehensive:{project_id}"
-        cached_report = await self.cache.get(cache_key)
+        cached_report = await self.get_cached_report(cache_key)
         if cached_report:
             return ProjectComprehensiveResponse(**cached_report)
         
@@ -46,9 +44,9 @@ class ProjectComprehensiveAnalytics:
         project_manager = await self.data_access.get_user_by_id(project_manager_id)
         project_manager_name = project_manager.get("name", "Unknown") if project_manager else "Unknown"
         
-        # Get progress and workload reports
-        progress_report = await self.progress_analytics.get_progress_report(project_id)
-        workload_report = await self.workload_analytics.get_workload_report(project_id)
+        # Get progress and workload reports using their respective strategies
+        progress_report = await self.progress_strategy.generate_report(project_id)
+        workload_report = await self.workload_strategy.generate_report(project_id)
         
         # Get teams in the project
         project_teams = await self.data_access.get_teams_by_project(project_id)
@@ -90,41 +88,7 @@ class ProjectComprehensiveAnalytics:
         )
         
         # Generate recommendations
-        recommendations = []
-        
-        # Check for resource allocation issues
-        resource_allocation = workload_report.resource_allocation
-        if resource_allocation.overallocated_teams:
-            recommendations.append(Recommendation(
-                type="resource",
-                description=f"{len(resource_allocation.overallocated_teams)} teams are overallocated. Consider redistributing work or adding resources.",
-                priority="high"
-            ))
-        
-        if resource_allocation.underallocated_teams:
-            recommendations.append(Recommendation(
-                type="efficiency",
-                description=f"{len(resource_allocation.underallocated_teams)} teams are underallocated. Consider optimizing resource allocation.",
-                priority="medium"
-            ))
-        
-        # Check completion rate
-        if progress_report.completion_rate < 25 and project.get("status") != "planned":
-            recommendations.append(Recommendation(
-                type="progress",
-                description=f"Project completion rate is only {progress_report.completion_rate}%. Consider reviewing timeline and resources.",
-                priority="high"
-            ))
-        
-        # Check for bottlenecks
-        if workload_report.bottlenecks:
-            high_severity = sum(1 for b in workload_report.bottlenecks if b.get("severity") == "high")
-            if high_severity > 0:
-                recommendations.append(Recommendation(
-                    type="bottleneck",
-                    description=f"Found {high_severity} high-severity bottlenecks. Address these to improve project flow.",
-                    priority="high"
-                ))
+        recommendations = self._generate_recommendations(progress_report, workload_report, project)
         
         # Create response
         try:
@@ -160,6 +124,46 @@ class ProjectComprehensiveAnalytics:
         )
         
         # Cache the response
-        await self.cache.set(cache_key, response.dict(), 300)  # Cache for 5 minutes
+        await self.cache_report(cache_key, response.dict())
         
         return response
+        
+    def _generate_recommendations(self, progress_report, workload_report, project) -> List[Recommendation]:
+        """Generate recommendations based on project analytics"""
+        recommendations = []
+        
+        # Check for resource allocation issues
+        resource_allocation = workload_report.resource_allocation
+        if resource_allocation.overallocated_teams:
+            recommendations.append(Recommendation(
+                type="resource",
+                description=f"{len(resource_allocation.overallocated_teams)} teams are overallocated. Consider redistributing work or adding resources.",
+                priority="high"
+            ))
+        
+        if resource_allocation.underallocated_teams:
+            recommendations.append(Recommendation(
+                type="efficiency",
+                description=f"{len(resource_allocation.underallocated_teams)} teams are underallocated. Consider optimizing resource allocation.",
+                priority="medium"
+            ))
+        
+        # Check completion rate
+        if progress_report.completion_rate < 25 and project.get("status") != "planned":
+            recommendations.append(Recommendation(
+                type="progress",
+                description=f"Project completion rate is only {progress_report.completion_rate}%. Consider reviewing timeline and resources.",
+                priority="high"
+            ))
+        
+        # Check for bottlenecks
+        if workload_report.bottlenecks:
+            high_severity = sum(1 for b in workload_report.bottlenecks if b.get("severity") == "high")
+            if high_severity > 0:
+                recommendations.append(Recommendation(
+                    type="bottleneck",
+                    description=f"Found {high_severity} high-severity bottlenecks. Address these to improve project flow.",
+                    priority="high"
+                ))
+                
+        return recommendations

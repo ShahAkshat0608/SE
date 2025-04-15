@@ -1,22 +1,17 @@
-from typing import Dict, Any, List, Optional
-from data.data_access_test import TestDataAccess
-from data.cache import SimpleMemoryCache
-from utils.analytics_utils import group_subtasks_by_priority, calculate_due_dates_distribution
+from typing import Dict, Any, List
 from models.response_models import UserWorkloadResponse, UserSubtaskDetail, PriorityDistribution
+from utils.analytics_utils import group_subtasks_by_priority, calculate_due_dates_distribution
+from .user_analytics_strategy import UserAnalyticsStrategy
 from datetime import datetime
 
-class UserWorkloadAnalytics:
-    """Service for user workload analytics"""
+class WorkloadAnalyticsStrategy(UserAnalyticsStrategy[UserWorkloadResponse]):
+    """Strategy for user workload analytics"""
     
-    def __init__(self):
-        self.data_access = TestDataAccess()
-        self.cache = SimpleMemoryCache()
-    
-    async def get_workload_report(self, user_id: str) -> UserWorkloadResponse:
+    async def generate_report(self, user_id: str) -> UserWorkloadResponse:
         """Generate a workload report for a user"""
         # Try to get from cache
         cache_key = f"user_workload:{user_id}"
-        cached_report = await self.cache.get(cache_key)
+        cached_report = await self.get_cached_report(cache_key)
         if cached_report:
             return UserWorkloadResponse(**cached_report)
         
@@ -87,6 +82,6 @@ class UserWorkloadAnalytics:
         )
         
         # Cache the response
-        await self.cache.set(cache_key, response.dict(), 300)  # Cache for 5 minutes
+        await self.cache_report(cache_key, response.dict())
         
         return response

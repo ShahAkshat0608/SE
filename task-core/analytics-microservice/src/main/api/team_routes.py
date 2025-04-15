@@ -1,176 +1,75 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
-from fastapi.security import HTTPBearer
-from typing import Dict, Optional
+from typing import Optional, Type
+from fastapi import Query, Request, Depends
+from pydantic import BaseModel
 
-from services.team_analytics.progress import TeamProgressAnalytics
-from services.team_analytics.workload import TeamWorkloadAnalytics
-from services.team_analytics.comprehensive import TeamComprehensiveAnalytics
 from models.response_models import TeamProgressResponse, TeamWorkloadResponse, TeamComprehensiveResponse
-from utils.auth_utils import verify_token, get_current_user, check_analytics_permission, RolePermission
-from utils.analytics_utils import generate_visualization_data
+from utils.auth_utils import RolePermission, get_current_user
+from .base_routes import BaseAnalyticsRoutes
 
-router = APIRouter()
-security = HTTPBearer()
+class TeamAnalyticsRoutes(BaseAnalyticsRoutes):
+    """Team analytics routes implementation"""
+    
+    def __init__(self):
+        super().__init__("/teams", RolePermission.TEAM_ANALYTICS)
+    
+    async def _generate_analytics(self, entity_id: str, project_id: Optional[str], report_type: str, visualize: bool):
+        """Generate team analytics report"""
+        if not project_id:
+            raise ValueError("Project ID is required for team analytics")
+            
+        return await self.facade.generate_team_analytics(entity_id, project_id, report_type, visualize)
+    
+    def get_progress_response_model(self) -> Type[BaseModel]:
+        return TeamProgressResponse
+        
+    def get_workload_response_model(self) -> Type[BaseModel]:
+        return TeamWorkloadResponse
+        
+    def get_comprehensive_response_model(self) -> Type[BaseModel]:
+        return TeamComprehensiveResponse
+    
+    # Override the route methods to require project_id
+    async def get_progress_analytics(
+        self,
+        request: Request,
+        entity_id: str,
+        project_id: str = Query(..., description="Project ID"),
+        visualize: bool = Query(False, description="Include visualization data"),
+        current_user: dict = Depends(get_current_user)
+    ):
+        return await super().get_progress_analytics(request, entity_id, project_id, visualize, current_user)
+    
+    async def get_workload_analytics(
+        self,
+        request: Request,
+        entity_id: str,
+        project_id: str = Query(..., description="Project ID"),
+        visualize: bool = Query(False, description="Include visualization data"),
+        current_user: dict = Depends(get_current_user)
+    ):
+        return await super().get_workload_analytics(request, entity_id, project_id, visualize, current_user)
+    
+    async def get_comprehensive_analytics(
+        self,
+        request: Request,
+        entity_id: str,
+        project_id: str = Query(..., description="Project ID"),
+        visualize: bool = Query(False, description="Include visualization data"),
+        current_user: dict = Depends(get_current_user)
+    ):
+        return await super().get_comprehensive_analytics(request, entity_id, project_id, visualize, current_user)
+    
+    async def get_analytics(
+        self,
+        request: Request,
+        entity_id: str,
+        project_id: str = Query(..., description="Project ID"),
+        report_type: str = Query("comprehensive", description="Type of report (progress, workload, comprehensive)"),
+        visualize: bool = Query(False, description="Include visualization data"),
+        current_user: dict = Depends(get_current_user)
+    ):
+        return await super().get_analytics(request, entity_id, project_id, report_type, visualize, current_user)
 
-# Initialize services
-progress_service = TeamProgressAnalytics()
-workload_service = TeamWorkloadAnalytics()
-comprehensive_service = TeamComprehensiveAnalytics()
-
-@router.get("/{team_id}/progress", response_model=TeamProgressResponse)
-async def get_team_progress(
-    request: Request,
-    team_id: str,
-    project_id: str = Query(..., description="Project ID"),
-    visualize: bool = Query(False, description="Include visualization data"),
-    current_user: Dict = Depends(get_current_user)
-):
-    """
-    Get progress analytics for a specific team
-    
-    Parameters:
-    - team_id: ID of the team to analyze
-    - project_id: ID of the project (required for team analytics)
-    - visualize: Whether to include visualization data
-    
-    Returns:
-    - Team progress analytics report
-    """
-    # Check permissions
-    has_permission = await check_analytics_permission(
-        request, 
-        RolePermission.TEAM_ANALYTICS, 
-        team_id,
-        project_id=project_id,
-        current_user=current_user
-    )
-    
-    if not has_permission:
-        raise HTTPException(
-            status_code=403,
-            detail="Not authorized to access this team's analytics"
-        )
-    
-    # Get analytics report
-    report = await progress_service.get_progress_report(team_id, project_id)
-    
-    # Add visualizations if requested
-    if visualize:
-        report.visualizations = generate_visualization_data("progress", report.dict())
-    
-    return report
-
-@router.get("/{team_id}/workload", response_model=TeamWorkloadResponse)
-async def get_team_workload(
-    request: Request,
-    team_id: str,
-    project_id: str = Query(..., description="Project ID"),
-    visualize: bool = Query(False, description="Include visualization data"),
-    current_user: Dict = Depends(get_current_user)
-):
-    """
-    Get workload analytics for a specific team
-    
-    Parameters:
-    - team_id: ID of the team to analyze
-    - project_id: ID of the project (required for team analytics)
-    - visualize: Whether to include visualization data
-    
-    Returns:
-    - Team workload analytics report
-    """
-    # Check permissions
-    has_permission = await check_analytics_permission(
-        request, 
-        RolePermission.TEAM_ANALYTICS, 
-        team_id,
-        project_id=project_id,
-        current_user=current_user
-    )
-    
-    if not has_permission:
-        raise HTTPException(
-            status_code=403,
-            detail="Not authorized to access this team's analytics"
-        )
-    
-    # Get analytics report
-    report = await workload_service.get_workload_report(team_id, project_id)
-    
-    # Add visualizations if requested
-    if visualize:
-        report.visualizations = generate_visualization_data("workload", report.dict())
-    
-    return report
-
-@router.get("/{team_id}/comprehensive", response_model=TeamComprehensiveResponse)
-async def get_team_comprehensive(
-    request: Request,
-    team_id: str,
-    project_id: str = Query(..., description="Project ID"),
-    visualize: bool = Query(False, description="Include visualization data"),
-    current_user: Dict = Depends(get_current_user)
-):
-    """
-    Get comprehensive analytics for a specific team
-    
-    Parameters:
-    - team_id: ID of the team to analyze
-    - project_id: ID of the project (required for team analytics)
-    - visualize: Whether to include visualization data
-    
-    Returns:
-    - Team comprehensive analytics report
-    """
-    # Check permissions
-    has_permission = await check_analytics_permission(
-        request, 
-        RolePermission.TEAM_ANALYTICS, 
-        team_id,
-        project_id=project_id,
-        current_user=current_user
-    )
-    
-    if not has_permission:
-        raise HTTPException(
-            status_code=403,
-            detail="Not authorized to access this team's analytics"
-        )
-    
-    # Get analytics report
-    report = await comprehensive_service.get_comprehensive_report(team_id, project_id)
-    
-    # Add visualizations if requested
-    if visualize:
-        report.visualizations = generate_visualization_data("comprehensive", report.dict())
-    
-    return report
-
-@router.get("/{team_id}", response_model=TeamComprehensiveResponse)
-async def get_team_analytics(
-    request: Request,
-    team_id: str,
-    project_id: str = Query(..., description="Project ID"),
-    report_type: str = Query("comprehensive", description="Type of report (progress, workload, comprehensive)"),
-    visualize: bool = Query(False, description="Include visualization data"),
-    current_user: Dict = Depends(get_current_user)
-):
-    """
-    Get analytics for a specific team
-    
-    Parameters:
-    - team_id: ID of the team to analyze
-    - project_id: ID of the project (required for team analytics)
-    - report_type: Type of report (progress, workload, comprehensive)
-    - visualize: Whether to include visualization data
-    
-    Returns:
-    - Team analytics report
-    """
-    # Route to the appropriate endpoint based on report type
-    if report_type == "progress":
-        return await get_team_progress(request, team_id, project_id, visualize, current_user)
-    elif report_type == "workload":
-        return await get_team_workload(request, team_id, project_id, visualize, current_user)
-    else:  # comprehensive or any other value
-        return await get_team_comprehensive(request, team_id, project_id, visualize, current_user)
+# Create an instance to expose the router
+team_routes = TeamAnalyticsRoutes()
+router = team_routes.router

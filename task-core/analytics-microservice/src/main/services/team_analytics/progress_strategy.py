@@ -1,22 +1,16 @@
-from typing import Dict, Any, List, Optional
-from data.data_access_test import TestDataAccess
-from data.cache import SimpleMemoryCache
-from utils.analytics_utils import calculate_completion_rate, calculate_milestone_completion
+from typing import Dict, Any, List
 from models.response_models import TeamProgressResponse, MemberProgress, MilestoneProgress, MilestonesProgress
-from datetime import datetime
+from utils.analytics_utils import calculate_completion_rate, calculate_milestone_completion
+from .team_analytics_strategy import TeamAnalyticsStrategy
 
-class TeamProgressAnalytics:
-    """Service for team progress analytics"""
+class ProgressAnalyticsStrategy(TeamAnalyticsStrategy[TeamProgressResponse]):
+    """Strategy for team progress analytics"""
     
-    def __init__(self):
-        self.data_access = TestDataAccess()
-        self.cache = SimpleMemoryCache()
-    
-    async def get_progress_report(self, team_id: str, project_id: str) -> TeamProgressResponse:
+    async def generate_report(self, team_id: str, project_id: str) -> TeamProgressResponse:
         """Generate a progress report for a team"""
         # Try to get from cache
         cache_key = f"team_progress:{team_id}:{project_id}"
-        cached_report = await self.cache.get(cache_key)
+        cached_report = await self.get_cached_report(cache_key)
         if cached_report:
             return TeamProgressResponse(**cached_report)
         
@@ -97,6 +91,6 @@ class TeamProgressAnalytics:
         )
         
         # Cache the response
-        await self.cache.set(cache_key, response.dict(), 300)  # Cache for 5 minutes
+        await self.cache_report(cache_key, response.dict())
         
         return response

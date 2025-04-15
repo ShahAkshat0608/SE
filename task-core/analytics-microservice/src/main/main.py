@@ -1,10 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
-from api.user_routes import router as user_router
-from api.team_routes import router as team_router
-from api.project_routes import router as project_router
 from config.settings import settings
+
+# Import the unified API router
+from api import api_router
 
 # Create FastAPI app
 app = FastAPI(
@@ -22,23 +22,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include routers with prefixes
+# Include the unified router with the API prefix
 app.include_router(
-    user_router,
-    prefix=f"{settings.API_PREFIX}/user",
-    tags=["User Analytics"]
-)
-
-app.include_router(
-    team_router,
-    prefix=f"{settings.API_PREFIX}/team",
-    tags=["Team Analytics"]
-)
-
-app.include_router(
-    project_router,
-    prefix=f"{settings.API_PREFIX}/project",
-    tags=["Project Analytics"]
+    api_router,
+    prefix=settings.API_PREFIX
 )
 
 @app.get("/health", tags=["Health"])

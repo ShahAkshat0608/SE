@@ -1,25 +1,23 @@
-from typing import Dict, Any, List, Optional
-from data.data_access_test import TestDataAccess
-from data.cache import SimpleMemoryCache
+from typing import Dict, Any, List
 from models.response_models import UserComprehensiveResponse, HistoricalPerformance, Recommendation
 from utils.analytics_utils import generate_recommendations
-from .progress import UserProgressAnalytics
-from .workload import UserWorkloadAnalytics
+from .user_analytics_strategy import UserAnalyticsStrategy
+from .progress_strategy import ProgressAnalyticsStrategy
+from .workload_strategy import WorkloadAnalyticsStrategy
 
-class UserComprehensiveAnalytics:
-    """Service for comprehensive user analytics"""
+class ComprehensiveAnalyticsStrategy(UserAnalyticsStrategy[UserComprehensiveResponse]):
+    """Strategy for comprehensive user analytics"""
     
     def __init__(self):
-        self.data_access = TestDataAccess()
-        self.cache = SimpleMemoryCache()
-        self.progress_analytics = UserProgressAnalytics()
-        self.workload_analytics = UserWorkloadAnalytics()
+        super().__init__()
+        self.progress_strategy = ProgressAnalyticsStrategy()
+        self.workload_strategy = WorkloadAnalyticsStrategy()
     
-    async def get_comprehensive_report(self, user_id: str) -> UserComprehensiveResponse:
+    async def generate_report(self, user_id: str) -> UserComprehensiveResponse:
         """Generate a comprehensive report for a user"""
         # Try to get from cache
         cache_key = f"user_comprehensive:{user_id}"
-        cached_report = await self.cache.get(cache_key)
+        cached_report = await self.get_cached_report(cache_key)
         if cached_report:
             return UserComprehensiveResponse(**cached_report)
         
@@ -35,9 +33,9 @@ class UserComprehensiveAnalytics:
                 workload_stats={}
             )
         
-        # Get progress and workload reports
-        progress_report = await self.progress_analytics.get_progress_report(user_id)
-        workload_report = await self.workload_analytics.get_workload_report(user_id)
+        # Get progress and workload reports using their respective strategies
+        progress_report = await self.progress_strategy.generate_report(user_id)
+        workload_report = await self.workload_strategy.generate_report(user_id)
         
         # Calculate historical performance (simplified for now)
         historical_performance = HistoricalPerformance(
@@ -75,6 +73,6 @@ class UserComprehensiveAnalytics:
         )
         
         # Cache the response
-        await self.cache.set(cache_key, response.dict(), 300)  # Cache for 5 minutes
+        await self.cache_report(cache_key, response.dict())
         
         return response

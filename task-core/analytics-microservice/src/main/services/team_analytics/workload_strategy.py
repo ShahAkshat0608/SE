@@ -1,22 +1,16 @@
-from typing import Dict, Any, List, Optional
-from data.data_access_test import TestDataAccess
-from data.cache import SimpleMemoryCache
-from utils.analytics_utils import calculate_workload_balance, calculate_workload_distribution
+from typing import Dict, Any, List
 from models.response_models import TeamWorkloadResponse, MemberWorkload, WorkloadDistribution
-from datetime import datetime
+from utils.analytics_utils import calculate_workload_balance, calculate_workload_distribution
+from .team_analytics_strategy import TeamAnalyticsStrategy
 
-class TeamWorkloadAnalytics:
-    """Service for team workload analytics"""
+class WorkloadAnalyticsStrategy(TeamAnalyticsStrategy[TeamWorkloadResponse]):
+    """Strategy for team workload analytics"""
     
-    def __init__(self):
-        self.data_access = TestDataAccess()
-        self.cache = SimpleMemoryCache()
-    
-    async def get_workload_report(self, team_id: str, project_id: str) -> TeamWorkloadResponse:
+    async def generate_report(self, team_id: str, project_id: str) -> TeamWorkloadResponse:
         """Generate a workload report for a team"""
         # Try to get from cache
         cache_key = f"team_workload:{team_id}:{project_id}"
-        cached_report = await self.cache.get(cache_key)
+        cached_report = await self.get_cached_report(cache_key)
         if cached_report:
             return TeamWorkloadResponse(**cached_report)
         
@@ -88,6 +82,6 @@ class TeamWorkloadAnalytics:
         )
         
         # Cache the response
-        await self.cache.set(cache_key, response.dict(), 300)  # Cache for 5 minutes
+        await self.cache_report(cache_key, response.dict())
         
         return response

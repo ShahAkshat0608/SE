@@ -1,22 +1,16 @@
-from typing import Dict, Any, List, Optional
-from data.data_access_test import TestDataAccess
-from data.cache import SimpleMemoryCache
-from utils.analytics_utils import identify_project_bottlenecks
+from typing import Dict, Any, List
 from models.response_models import ProjectWorkloadResponse, TeamWorkload, ResourceAllocation
-from datetime import datetime
+from utils.analytics_utils import identify_project_bottlenecks
+from .project_analytics_strategy import ProjectAnalyticsStrategy
 
-class ProjectWorkloadAnalytics:
-    """Service for project workload analytics"""
+class WorkloadAnalyticsStrategy(ProjectAnalyticsStrategy[ProjectWorkloadResponse]):
+    """Strategy for project workload analytics"""
     
-    def __init__(self):
-        self.data_access = TestDataAccess()
-        self.cache = SimpleMemoryCache()
-    
-    async def get_workload_report(self, project_id: str) -> ProjectWorkloadResponse:
+    async def generate_report(self, project_id: str) -> ProjectWorkloadResponse:
         """Generate a workload report for a project"""
         # Try to get from cache
         cache_key = f"project_workload:{project_id}"
-        cached_report = await self.cache.get(cache_key)
+        cached_report = await self.get_cached_report(cache_key)
         if cached_report:
             return ProjectWorkloadResponse(**cached_report)
         
@@ -106,6 +100,6 @@ class ProjectWorkloadAnalytics:
         )
         
         # Cache the response
-        await self.cache.set(cache_key, response.dict(), 300)  # Cache for 5 minutes
+        await self.cache_report(cache_key, response.dict())
         
         return response

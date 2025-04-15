@@ -1,22 +1,17 @@
-from typing import Dict, Any, List, Optional
-from data.data_access_test import TestDataAccess
-from data.cache import SimpleMemoryCache
-from utils.analytics_utils import calculate_completion_rate
+from typing import Dict, Any, List
 from models.response_models import UserProgressResponse, UserSubtaskDetail
+from utils.analytics_utils import calculate_completion_rate
+from .user_analytics_strategy import UserAnalyticsStrategy
 from datetime import datetime
 
-class UserProgressAnalytics:
-    """Service for user progress analytics"""
+class ProgressAnalyticsStrategy(UserAnalyticsStrategy[UserProgressResponse]):
+    """Strategy for user progress analytics"""
     
-    def __init__(self):
-        self.data_access = TestDataAccess()
-        self.cache = SimpleMemoryCache()
-    
-    async def get_progress_report(self, user_id: str) -> UserProgressResponse:
+    async def generate_report(self, user_id: str) -> UserProgressResponse:
         """Generate a progress report for a user"""
         # Try to get from cache
         cache_key = f"user_progress:{user_id}"
-        cached_report = await self.cache.get(cache_key)
+        cached_report = await self.get_cached_report(cache_key)
         if cached_report:
             return UserProgressResponse(**cached_report)
         
@@ -86,6 +81,6 @@ class UserProgressAnalytics:
         )
         
         # Cache the response
-        await self.cache.set(cache_key, response.dict(), 300)  # Cache for 5 minutes
+        await self.cache_report(cache_key, response.dict())
         
         return response
