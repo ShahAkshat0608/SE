@@ -26,20 +26,30 @@ class SubtaskDAL:
         """Add a new subtask."""
         cursor = self.conn.cursor()
         cursor.execute(
-            """
-            INSERT INTO subtasks (id, task_id, name, description, priority, due_date, is_completed)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-            """,
-            (
-                subtask.id,
-                subtask.task_id,
-                subtask.name,
-                subtask.description,
-                subtask.priority.value,
-                subtask.due_date.isoformat() if subtask.due_date else None,
-                int(subtask.is_completed),
-            ),
-        )
+        """
+        INSERT INTO subtasks (id, task_id, name, description, project_id , priority, due_date, completed, assigned, assigned_to, 
+                              estimated_hours, parent_subtask_id, tags, milestone_id, is_completed, created_at)
+        VALUES (?, ?, ?, ?, ? , ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            subtask.id,
+            subtask.task_id,
+            subtask.name,
+            subtask.description,
+            subtask.project_id,
+            subtask.priority.value,
+            subtask.due_date.isoformat() if subtask.due_date else None,
+            int(subtask.completed),
+            int(subtask.assigned),
+            subtask.assigned_to,
+            subtask.estimated_hours,
+            subtask.parent_subtask_id,
+            json.dumps(subtask.tags),
+            subtask.milestone_id,
+            int(subtask.is_completed),
+            subtask.created_at.isoformat() if subtask.created_at else None,
+        ),
+    )
         self.conn.commit()
 
     def update_subtask(self, subtask_id: str, updated_subtask: Subtask):

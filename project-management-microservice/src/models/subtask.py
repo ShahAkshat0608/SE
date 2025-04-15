@@ -37,6 +37,7 @@ class Subtask:
         return {
             "id": self.id,
             "task_id": self.task_id,
+            "name": self.name,
             "description": self.description,
             "project_id": self.project_id,
             "priority": self.priority.value,
@@ -56,6 +57,7 @@ class Subtask:
     def from_dict(data):
         subtask = Subtask(
             id=data.get("id"),
+            name = data.get("name"),
             task_id=data.get("task_id"),
             description=data.get("description"),
             project_id=data.get("project_id"),

@@ -24,23 +24,23 @@ class TaskDAL:
         """Add a new task."""
         cursor = self.conn.cursor()
         cursor.execute(
-            """
-            INSERT INTO tasks (id, project_id, team_id, name, description, status, priority, created_at, target_due_date, assigned_team_id)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """,
-            (
-                task["id"],
-                task["project_id"],
-                task["team_id"],
-                task["name"],
-                task["description"],
-                task["status"],
-                task["priority"],
-                task["created_at"],
-                task["target_due_date"],
-                task["assigned_team_id"],
-            ),
-        )
+        """
+        INSERT INTO tasks (id, project_id, team_id, name, description, status, priority, created_at, target_due_date, assigned_team_id)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            task["id"],
+            task["project_id"],
+            task["team_id"],
+            task["name"],
+            task["description"],
+            task["status"],
+            task["priority"],
+            task["created_at"],
+            task["target_due_date"],
+            task["assigned_team_id"],
+        ),
+    )
         self.conn.commit()
 
     def update_task(self, task_id: str, updated_task: dict):

@@ -25,18 +25,21 @@ class MilestoneDAL:
         """Add a new milestone."""
         cursor = self.conn.cursor()
         cursor.execute(
-            """
-            INSERT INTO milestones (id, name, description, project_id, sequence)
-            VALUES (?, ?, ?, ?, ?)
-            """,
-            (
-                milestone.id,
-                milestone.name,
-                milestone.description,
-                milestone.project_id,
-                milestone.sequence,
-            ),
-        )
+        """
+        INSERT INTO milestones (id, name, description, project_id, sequence_no, due_date, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            milestone.id,
+            milestone.name,
+            milestone.description,
+            milestone.project_id,
+            milestone.sequence_no,
+            milestone.due_date.isoformat() if milestone.due_date else None,
+            milestone.created_at.isoformat() if milestone.created_at else None,
+            milestone.updated_at.isoformat() if milestone.updated_at else None,
+        ),
+    )
         self.conn.commit()
 
     def update_milestone(self, milestone_id: str, updated_milestone: Milestone):

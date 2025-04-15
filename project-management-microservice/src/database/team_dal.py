@@ -43,3 +43,21 @@ class TeamDAL:
         cursor = self.conn.cursor()
         cursor.execute("DELETE FROM teams WHERE id = ?", (team_id,))
         self.conn.commit()
+
+    def addUserToTeam(self, user_id: str, team_id: str):
+        """Add a user to a team."""
+        cursor = self.conn.cursor()
+        cursor.execute(
+            "INSERT INTO team_members (user_id, team_id) VALUES (?, ?)",
+            (user_id, team_id),
+        )
+        self.conn.commit()
+    
+    def removeUserfromTeam(self , user_id: str, team_id: str):
+        """Remove a user from a team."""
+        cursor = self.conn.cursor()
+        cursor.execute(
+            "DELETE FROM team_members WHERE user_id = ? AND team_id = ?",
+            (user_id, team_id),
+        )
+        self.conn.commit()

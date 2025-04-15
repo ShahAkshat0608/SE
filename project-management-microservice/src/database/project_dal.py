@@ -24,20 +24,27 @@ class ProjectDAL:
         """Add a new project."""
         cursor = self.conn.cursor()
         cursor.execute(
-            """
-            INSERT INTO projects (id, name, description, status, start_date, end_date, project_manager_id)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-            """,
-            (
-                project["id"],
-                project["name"],
-                project["description"],
-                project["status"],
-                project["start_date"],
-                project["end_date"],
-                project["project_manager_id"],
-            ),
-        )
+        """
+        INSERT INTO projects (id, name, description, status, start_date, target_end_date, project_manager_id, 
+                              completion_percentage, priority, client, department, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            project["id"],
+            project["name"],
+            project["description"],
+            project["status"],
+            project["start_date"],
+            project["target_end_date"],
+            project["project_manager_id"],
+            project["completion_percentage"],
+            project["priority"],
+            project["client"],
+            project["department"],
+            project["created_at"],
+            project["updated_at"],
+        ),
+    )
         self.conn.commit()
 
     def update_project(self, project_id: str, updated_project: dict):
