@@ -1,118 +1,4 @@
-## Prompt
-AdarshOnGith: I am building a project management subsystem:
-
-I facillitates following things:
-
-a user can create a project with following steps:
-user need to assign a user (himself or other user) as role of project manager
-project manager define teams for this project
-project manger define milestones and order of milestones for the project (think as a pipeline each team need to follow for the subtask team has)
-each team need to be assigned with Team Lead by project manager
-project has multiple teams, team is in only one project
-project manager defines Task (broad view) for project
-one to one mapping for Task and Team, so each Task assigned to one team
-each Task is divided into sub tasks which is actually worked by team
-
-each Team has team members apart from team lead
-each member is only in one team  within a project.
-members can be added to team by respective team lead or project manager
-Team Lead breaks Task into subtasks, subtasks can be assigned to a team members. (this subtask follows the milestone pipeline)
-
-team member updates the task 
-
-There is analytics microservice to facillitate following 3 types of analytics:
-- progress/completion rate analytics
-- workload analytics
-- comprehensive report (pending, progress, workload analytics).
-
-now these 3 type of analytics can be requested as follows:
-- user level analytics (for all the subtask assigned to user taken into consideration) -- requested for given user
-
--team level analytics (team analytics has analytics related to all subtasks team has, and analytics for team members in team ) -- requested for given team given project
-
-- project level analytics (project analytics specific to all teams present in the project contains analytics related to all subtask present in the project, all members present in project, all teams in project).
-
-user  level analytics can be requested by user himself for all the subtasks he has ( across many projects or many teams etc)
-
-user level analytics can be requested by Team Lead or Project Manager for the team member.
-
-team level  analytics can be requested by team lead (for his team) or project manager for particular team in the project
-
-project level analytics can only be requested by project manager for his project.
-
-
-
-
-Refer the example.json for example schema, i wil give breif of other system to relate :
-1. User Management
-Users have:
-
-id, name, email, contact.
-
-No global roles (roles are project-specific).
-
-Project-Specific Roles:
-
-Assigned via projects.project_manager_id, teams.team_lead_id, or team_members table.
-
-2. Project Structure
-Projects:
-
-Have metadata: description, status, priority, client, department, start/end dates.
-
-Track completion_percentage.
-
-Teams:
-
-Belong to one project, have one lead, and multiple members.
-
-Tasks:
-
-Assigned to teams with target_due_date.
-
-Subtasks:
-
-Assigned to individuals (assigned_to).
-
-Support dependencies (parent_subtask_id).
-
-Track priority, due_date, estimated_hours, completed status.
-
-Milestones
-Define project phases (e.g., "Design, develop, test").
-
-Attributes:
-
-sequence_no (order in pipeline), due_date, description.
-
-Linked to a single project (project_id).
-Project Manager:
-
-Creates a project (Website Redesign).
-
-Defines milestones (Design → Development → Launch).
-
-Assigns team leads.
-
-Team Lead:
-
-Breaks tasks into subtasks (e.g., "Implement Login UI").
-
-Assigns subtasks to members.
-
-Team Member:
-
-Completes subtasks, marking them as done.
-
-Progress reflects in milestones/project completion.
-
-
-ok so now, 
-leave the access control suppose they are in place, give implementation of analytics microserve to provide the response for the various type of valid request (suppose access level validation is in place and request reaches is requested my correct role user)
-and give me complete roadmap for analytics microservice.
-
-
-GitHub Copilot: # Analytics Microservice Implementation Roadmap
+# Analytics Microservice Implementation Roadmap
 
 ## Architecture Overview
 
@@ -971,3 +857,123 @@ def create_service_token(service_name: str, target_service: str, role: str = "se
     token = jwt.encode(payload, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
     
     return token
+
+
+
+
+
+# Remove it
+## Prompt
+AdarshOnGith: I am building a project management subsystem:
+
+I facillitates following things:
+
+a user can create a project with following steps:
+user need to assign a user (himself or other user) as role of project manager
+project manager define teams for this project
+project manger define milestones and order of milestones for the project (think as a pipeline each team need to follow for the subtask team has)
+each team need to be assigned with Team Lead by project manager
+project has multiple teams, team is in only one project
+project manager defines Task (broad view) for project
+one to one mapping for Task and Team, so each Task assigned to one team
+each Task is divided into sub tasks which is actually worked by team
+
+each Team has team members apart from team lead
+each member is only in one team  within a project.
+members can be added to team by respective team lead or project manager
+Team Lead breaks Task into subtasks, subtasks can be assigned to a team members. (this subtask follows the milestone pipeline)
+
+team member updates the task 
+
+There is analytics microservice to facillitate following 3 types of analytics:
+- progress/completion rate analytics
+- workload analytics
+- comprehensive report (pending, progress, workload analytics).
+
+now these 3 type of analytics can be requested as follows:
+- user level analytics (for all the subtask assigned to user taken into consideration) -- requested for given user
+
+-team level analytics (team analytics has analytics related to all subtasks team has, and analytics for team members in team ) -- requested for given team given project
+
+- project level analytics (project analytics specific to all teams present in the project contains analytics related to all subtask present in the project, all members present in project, all teams in project).
+
+user  level analytics can be requested by user himself for all the subtasks he has ( across many projects or many teams etc)
+
+user level analytics can be requested by Team Lead or Project Manager for the team member.
+
+team level  analytics can be requested by team lead (for his team) or project manager for particular team in the project
+
+project level analytics can only be requested by project manager for his project.
+
+
+
+
+Refer the example.json for example schema, i wil give breif of other system to relate :
+1. User Management
+Users have:
+
+id, name, email, contact.
+
+No global roles (roles are project-specific).
+
+Project-Specific Roles:
+
+Assigned via projects.project_manager_id, teams.team_lead_id, or team_members table.
+
+2. Project Structure
+Projects:
+
+Have metadata: description, status, priority, client, department, start/end dates.
+
+Track completion_percentage.
+
+Teams:
+
+Belong to one project, have one lead, and multiple members.
+
+Tasks:
+
+Assigned to teams with target_due_date.
+
+Subtasks:
+
+Assigned to individuals (assigned_to).
+
+Support dependencies (parent_subtask_id).
+
+Track priority, due_date, estimated_hours, completed status.
+
+Milestones
+Define project phases (e.g., "Design, develop, test").
+
+Attributes:
+
+sequence_no (order in pipeline), due_date, description.
+
+Linked to a single project (project_id).
+Project Manager:
+
+Creates a project (Website Redesign).
+
+Defines milestones (Design → Development → Launch).
+
+Assigns team leads.
+
+Team Lead:
+
+Breaks tasks into subtasks (e.g., "Implement Login UI").
+
+Assigns subtasks to members.
+
+Team Member:
+
+Completes subtasks, marking them as done.
+
+Progress reflects in milestones/project completion.
+
+
+ok so now, 
+leave the access control suppose they are in place, give implementation of analytics microserve to provide the response for the various type of valid request (suppose access level validation is in place and request reaches is requested my correct role user)
+and give me complete roadmap for analytics microservice.
+
+
