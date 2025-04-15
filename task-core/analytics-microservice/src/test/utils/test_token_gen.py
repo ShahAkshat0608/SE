@@ -1,12 +1,14 @@
 from datetime import datetime, timedelta
 from typing import Dict
 import jwt
+import os
+from dotenv import load_dotenv
 
-# This must be the same key used in the analytics service
-JWT_SECRET_KEY = "your-secret-key-for-development-only"  # Use env vars in production
-JWT_ALGORITHM = "HS256"
-TOKEN_EXPIRE_MINUTES = 60 * 24  # 24 hours
-
+# Load environment variables from .env file
+load_dotenv()
+JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY')
+JWT_ALGORITHM = os.getenv('JWT_ALGORITHM')
+TOKEN_EXPIRE_MINUTES = eval(os.getenv('TOKEN_EXPIRE_MINUTES'))
 
 def create_access_token(data: Dict) -> str:
     """Create a new JWT token"""

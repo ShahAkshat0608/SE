@@ -4,14 +4,22 @@ import jwt
 from datetime import datetime, timedelta
 from typing import Dict, Optional, List
 from data.data_access_test import TestDataAccess
+import os
+from dotenv import load_dotenv
 
 # JWT security scheme
 security = HTTPBearer()
 
 # Constants - normally should be in config
-JWT_SECRET_KEY = "your-secret-key-for-development-only"  # Replace in production
-JWT_ALGORITHM = "HS256"
-TOKEN_EXPIRE_MINUTES = 60 * 24  # 24 hours
+# JWT_SECRET_KEY = "your-secret-key-for-development-only"  # Use env vars in production
+# JWT_ALGORITHM = "HS256"
+# TOKEN_EXPIRE_MINUTES = 60 * 24  # 24 hours
+
+# Load environment variables from .env file
+load_dotenv()
+JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY')
+JWT_ALGORITHM = os.getenv('JWT_ALGORITHM')
+TOKEN_EXPIRE_MINUTES = eval(os.getenv('TOKEN_EXPIRE_MINUTES'))
 
 class RolePermission:
     """Role-based permission constants"""
