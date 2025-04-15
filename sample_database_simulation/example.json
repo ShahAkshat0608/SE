@@ -1,0 +1,189 @@
+{
+    "users": [
+      {
+        "id": "user-0011",
+        "name": "Alice",
+        "email": "al.m@example.com",
+        "contact": "792255501"
+      },
+      {
+        "id": "user-002",
+        "name": "Bob",
+        "email": "bob.m@example.com",
+        "contact": "6922432001"
+      },
+      {
+        "id": "user-003",
+        "name": "Charlie",
+        "email": "charl@example.com",
+        "contact": "7112432001"
+      },
+      {
+        "id": "user-004",
+        "name": "miah trim",
+        "email": "miah.m@example.com",
+        "contact": "7922432001"
+      },
+      {
+        "id": "user-104",
+        "name": "Sarah Kim",
+        "email": "sarah.kim@example.com",
+        "contact": "7922772001"
+      }
+    ],
+    
+    "subtasks": [
+      {
+        "id": "subtask-501",
+        "task_id": "task-5003",
+        "description": "Implement login feature",
+        "priority": "high",
+        "due_date": "2025-04-20T00:00:00",
+        "completed": false,
+        "created_at": "2025-04-01T10:00:00",
+        "assigned": true,
+        "assigned_to": "user-002",
+        "project_id": "project-001",
+        "estimated_hours": 8,
+        "tags": ["backend", "authentication"],
+        "parent_subtask_id": "subtask-502"
+      },
+      {
+        "id": "subtask-502",
+        "task_id": "task-5005",
+        "description": "Implement dashboard feature",
+        "priority": "high",
+        "due_date": "2025-04-20T00:00:00",
+        "completed": false,
+        "created_at": "2025-04-01T10:00:00",
+        "assigned": true,
+        "assigned_to": "user-001",
+        "project_id": "project-002",
+        "estimated_hours": 18,
+        "tags": ["backend", "caching"],
+        "parent_subtask_id": "subtask-502"
+      }
+    ],
+    
+    "team_members": [
+      {
+        "team_id": "team-001",
+        "user_id": "user-103",
+        "joined_at": "2023-01-10T14:25:30"
+      },
+      {
+        "team_id": "team-001",
+        "user_id": "user-105",
+        "joined_at": "2023-01-11T10:15:00"
+      },
+      {
+        "team_id": "team-001",
+        "user_id": "user-101",
+        "joined_at": "2023-01-20T16:45:00"
+      },
+      {
+        "team_id": "team-001",
+        "user_id": "user-102",
+        "joined_at": "2023-01-20T16:50:00"
+      },
+      {
+        "team_id": "team-001",
+        "user_id": "user-104",
+        "joined_at": "2023-01-20T16:55:00"
+      }
+    ],
+    
+    "teams": [
+      {
+        "id": "team-001",
+        "name": "Design Team",
+        "project_id": "project-001",
+        "team_lead_id": "user-001",
+        "created_at": "2023-01-10T14:25:30"
+      },
+      {
+        "id": "team-002",
+        "name": "Development Team",
+        "project_id": "project-001",
+        "team_lead_id": "user-007",
+        "created_at": "2023-01-20T16:45:00"
+      },
+      {
+        "id": "team-003",
+        "name": "UI_Design Team",
+        "project_id": "project-002",
+        "team_lead_id": "user-001",
+        "created_at": "2023-02-10T14:25:30"
+      }
+    ],
+    
+    "tasks": [
+      {
+        "id": "task-5001",
+        "project_id": "project-001",
+        "team_id": "team-004",
+        "created_at": "2023-01-12T09:00:00",
+        "target_due_date": "2023-03-12T09:00:00"
+      },
+      {
+        "id": "task-5002",
+        "project_id": "project-001",
+        "team_id": "team-003",
+        "created_at": "2023-01-12T09:05:00",
+        "target_due_date": "2023-02-12T09:00:00"
+      },
+      {
+        "id": "task-5004",
+        "project_id": "project-001",
+        "team_id": "team-002",
+        "created_at": "2023-01-15T11:30:00",
+        "target_due_date": "2023-03-22T09:00:00"
+      },
+      {
+        "id": "task-5005",
+        "project_id": "project-001",
+        "team_id": "team-001",
+        "created_at": "2023-01-15T11:35:00",
+        "target_due_date": "2023-04-12T09:00:00"
+      }
+    ],
+    
+    "Milestones": [
+      {
+        "id": "milestone-101",
+        "name": "Design Phase Complete",
+        "project_id": "project-001",
+        "description": "Finalize all design assets and get approval",
+        "due_date": "2023-02-15T00:00:00",
+        "created_at": "2023-01-10T14:30:00",
+        "sequence_no": "1",
+        "milestoneupdated_at": "2023-02-16T10:20:15"
+      },
+      {
+        "id": "milestone-102",
+        "name": "Development Complete",
+        "project_id": "project-002",
+        "description": "Finish all coding and prepare for testing",
+        "due_date": "2023-03-30T00:00:00",
+        "created_at": "2023-01-10T14:32:00",
+        "sequence_no": "1",
+        "updated_at": "2023-01-10T14:32:00"
+      }
+    ],
+    
+    "projects": {
+      "id": "project-001",
+      "name": "Website Redesign",
+      "description": "Complete overhaul of the company website with new brand identity",
+      "status": "active",
+      "start_date": "2023-01-15T00:00:00",
+      "target_end_date": "2023-04-30T00:00:00",
+      "project_manager_id": "user-103",
+      "completion_percentage": 45.5,
+      "created_at": "2023-01-10T14:25:30",
+      "updated_at": "2023-03-05T09:12:18",
+      "priority": "high",
+      "client": "internal",
+      "department": "marketing"
+    }
+  }

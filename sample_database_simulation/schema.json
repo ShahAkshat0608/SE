@@ -1,0 +1,93 @@
+{
+    "users": [
+      {
+        "id": "user-0011",
+        "name": "Alice",
+        "email": "al.m@example.com",
+        "contact": "792255501"
+      }
+    ],
+    "projects": [
+      {
+        "id": "project-001",
+        "name": "Website Redesign",
+        "description": "Complete overhaul...",
+        "status": "active",
+        "start_date": "2023-01-15T00:00:00",
+        "target_end_date": "2023-04-30T00:00:00",
+        "project_manager_id": "user-103",
+        "completion_percentage": 45.5,
+        "created_at": "2023-01-10T14:25:30",
+        "updated_at": "2023-03-05T09:12:18",
+        "priority": "high",
+        "client": "internal",
+        "department": "marketing"
+      }
+    ],
+    "teams": [
+      {
+        "id": "team-001",
+        "name": "Design Team",
+        "project_id": "project-001",
+        "team_lead_id": "user-001",
+        "created_at": "2023-01-10T14:25:30"
+      }
+    ],
+    "team_members": [
+      {
+        "team_id": "team-001",
+        "user_id": "user-103",
+        "joined_at": "2023-01-10T14:25:30"
+      }
+    ],
+    "tasks": [
+      {
+        "id": "task-5001",
+        "project_id": "project-001",
+        "team_id": "team-004",
+        "created_at": "2023-01-12T09:00:00",
+        "target_due_date": "2023-03-12T09:00:00"
+      }
+    ],
+    "subtasks": [
+      {
+        "id": "subtask-501",
+        "task_id": "task-5003",
+        "description": "Implement login feature",
+        "priority": "high",
+        "due_date": "2025-04-20T00:00:00",
+        "completed": false,
+        "created_at": "2025-04-01T10:00:00",
+        "assigned": true,
+        "assigned_to": "user-002",
+        "project_id": "project-001",
+        "estimated_hours": 8,
+        "parent_subtask_id": "subtask-502",
+        "tags": ["backend", "authentication"]
+      }
+    ],
+    "milestones": [
+        {
+        "id": "milestone-101",
+        "name": "Design Phase Complete",
+        "project_id": "project-001",
+        "description": "Finalize all design assets and get approval",
+        "due_date": "2023-02-15T00:00:00",
+        "created_at": "2023-01-10T14:30:00",
+        "sequence_no": 1,
+        "updated_at": "2023-02-16T10:20:15"
+        },
+        {
+        "id": "milestone-102",
+        "name": "Development Complete",
+        "project_id": "project-002",
+        "description": "Finish all coding and prepare for testing",
+        "due_date": "2023-03-30T00:00:00",
+        "created_at": "2023-01-10T14:32:00",
+        "sequence_no": 2,
+        "updated_at": "2023-01-10T14:32:00"
+        }
+    ]
+}
+
+
