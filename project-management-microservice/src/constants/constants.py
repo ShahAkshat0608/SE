@@ -1,0 +1,23 @@
+
+ROLE_PROJECT_MANAGER = "PROJECT_MANAGER"
+ROLE_TEAM_LEAD = "TEAM_LEAD"
+ROLE_TEAM_MEMBER = "TEAM_MEMBER"
+
+# Role hierarchy levels (numeric values indicating authority level)
+LEVEL_PROJECT_MANAGER = 3
+LEVEL_TEAM_LEAD = 2
+LEVEL_TEAM_MEMBER = 1
+
+# Mapping of roles to their hierarchy levels
+ROLE_HIERARCHY = {
+    ROLE_PROJECT_MANAGER: LEVEL_PROJECT_MANAGER,
+    ROLE_TEAM_LEAD: LEVEL_TEAM_LEAD,
+    ROLE_TEAM_MEMBER: LEVEL_TEAM_MEMBER
+}
+
+# Set of all valid roles for validation
+VALID_ROLES = {
+    ROLE_PROJECT_MANAGER,
+    ROLE_TEAM_LEAD,
+    ROLE_TEAM_MEMBER
+}

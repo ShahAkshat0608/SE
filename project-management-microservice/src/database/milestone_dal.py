@@ -48,14 +48,21 @@ class MilestoneDAL:
         cursor.execute(
             """
             UPDATE milestones
-            SET name = ?, description = ?, project_id = ?, sequence = ?
+            SET name = ?, 
+                description = ?, 
+                project_id = ?, 
+                sequence_no = ?, 
+                due_date = ?, 
+                updated_at = ?
             WHERE id = ?
             """,
             (
                 updated_milestone.name,
                 updated_milestone.description,
                 updated_milestone.project_id,
-                updated_milestone.sequence,
+                updated_milestone.sequence_no,
+                updated_milestone.due_date.isoformat() if updated_milestone.due_date else None,
+                updated_milestone.updated_at.isoformat() if updated_milestone.updated_at else None,
                 milestone_id,
             ),
         )

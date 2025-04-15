@@ -13,6 +13,16 @@ class RoleDAL:
         cursor.execute("SELECT * FROM roles WHERE id = ?", (role_id,))
         row = cursor.fetchone()
         return Role.from_dict(dict(row)) if row else None
+    
+    def get_role_by_user_and_project(self, user_id: str, project_id: str) -> Optional[Role]:
+        """Fetch a role by user ID and project ID."""
+        cursor = self.conn.cursor()
+        cursor.execute(
+            "SELECT * FROM roles WHERE user_id = ? AND project_id = ?",
+            (user_id, project_id),
+        )
+        row = cursor.fetchone()
+        return Role.from_dict(dict(row)) if row else None   
 
     def get_roles_by_project(self, project_id: str) -> List[Role]:
         """Fetch all roles for a project."""
