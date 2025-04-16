@@ -173,3 +173,13 @@ class RoleService:
         Check if a user has team member access for a project.
         """
         return self.checkAccess(userId, projectId, ROLE_TEAM_MEMBER) 
+
+    def getRoleInProject(self, userId: UUID, projectId: UUID) -> Role:
+        """
+        Get the role of a user in a specific project.
+        
+        Args:
+            userId: The UUID of the user
+            projectId: The UUID of the project
+        """
+        return self.role_dal.get_role_by_user_and_project(user_id_str, project_id_str).role
