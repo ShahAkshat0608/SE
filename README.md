@@ -47,7 +47,7 @@ A command-line task manager built with Python, using a microservice architecture
     Open a terminal in the project root and run:
     ```bash
     # Default port is 8001
-    uvicorn user_management.src.main.main:app --reload --port 8001
+    uvicorn user-management.src.main.main:app --reload --port 8001
     ```
     *(Note: `--reload` is for development. Use a production server like Gunicorn for deployment.)*
     The service API documentation will be available at `http://127.0.0.1:8001/docs`.

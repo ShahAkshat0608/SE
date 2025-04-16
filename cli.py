@@ -6,13 +6,6 @@ import getpass # For password input
 import logging
 
 from task_manager import TaskManager
-# Import user management functions
-from user_management.auth import (
-    register_user,
-    login_user,
-    logout_user,
-    get_current_user
-)
 
 # --- Configuration ---
 USER_SERVICE_BASE_URL = os.environ.get("USER_SERVICE_URL", "http://127.0.0.1:8001")

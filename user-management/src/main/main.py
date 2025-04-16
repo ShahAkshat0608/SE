@@ -48,7 +48,7 @@ if __name__ == "__main__":
     # The host '0.0.0.0' makes it accessible on the network.
     # Default port 8001 to avoid conflict with analytics service (assumed 8000).
     # Use "main:app" when running the script directly.
-    # The command line 'uvicorn user_management.src.main.main:app ...' works because
+    # The command line 'uvicorn user-management.src.main.main:app ...' works because
     # uvicorn handles the path resolution from the project root.
     uvicorn.run(
         "main:app", # Correct reference when running this script directly
