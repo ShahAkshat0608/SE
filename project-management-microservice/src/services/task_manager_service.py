@@ -28,3 +28,7 @@ class TaskManager:
 
     def getSubtasksByTask(self, taskId: UUID) -> List[dict]:
         pass
+
+    def can_complete_subtask(self, subtask_id):
+        """Check if all dependencies are satisfied, subtask cannot be at the milestone which is ahead of the milestone of child subtasks"""
+        pass    
