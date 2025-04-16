@@ -6,7 +6,7 @@ from typing import Dict, Any, Optional
 import logging
 import time
 from functools import lru_cache
-from utils.auth_token_gen import create_access_token
+from ...utils.auth_token_gen import create_access_token
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +15,7 @@ class AnalyticsServiceClient:
     
     def __init__(
         self, 
-        base_url: str = "http://localhost:8000/api/analytics",
+        base_url: str = "http://localhost:8002/api/analytics",
         service_secret: str = "your-secret-key-for-development-only",
         timeout: int = 10,
         enable_cache: bool = True,

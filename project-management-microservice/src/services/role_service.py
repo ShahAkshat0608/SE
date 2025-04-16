@@ -3,7 +3,7 @@ from uuid import UUID
 import uuid 
 from ..models.role import Role
 from ..database.role_dal import RoleDAL
-from .constants import ROLE_PROJECT_MANAGER, ROLE_TEAM_LEAD, ROLE_TEAM_MEMBER, ROLE_HIERARCHY
+from ..constants.constants import ROLE_PROJECT_MANAGER, ROLE_TEAM_LEAD, ROLE_TEAM_MEMBER, ROLE_HIERARCHY
 
 class RoleService:
     def __init__(self, role_dal: RoleDAL = None):
