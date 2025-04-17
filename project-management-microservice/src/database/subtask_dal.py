@@ -2,6 +2,7 @@ import sqlite3
 from typing import List, Optional
 from datetime import datetime
 from ..models.subtask import Subtask
+import json
 DEFAULT_DB_PATH = "/Users/sarthak/Desktop/IIIT Course Work/Sem8/SE/project-3/SE/project-management-microservice/src/database/project_management.db"
 
 class SubtaskDAL:
@@ -66,7 +67,7 @@ class SubtaskDAL:
                 updated_subtask.task_id,
                 updated_subtask.name,
                 updated_subtask.description,
-                updated_subtask.priority.value,
+                updated_subtask.priority,
                 updated_subtask.due_date.isoformat() if updated_subtask.due_date else None,
                 int(updated_subtask.is_completed),
                 subtask_id,

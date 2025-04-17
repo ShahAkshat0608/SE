@@ -242,11 +242,31 @@ async def view_project_analytics(project_id: str):
 @router.post("/tasks/{task_id}/subtasks", response_model=Dict)
 async def create_subtask(
     task_id: str,
-    subtask_data: Dict,
-    current_user: Dict = Depends(get_current_user)
+    subtask_name: str,
+    subtask_description: str,
+    subtask_priority: Optional[str] = "MEDIUM",
+    subtask_due_date: Optional[str] = None,
+    subtask_milestone_id: Optional[str] = None,
+    subtask_tags: Optional[List[str]] = None,
 ):
     """Create a subtask for a task (Team Lead)"""
+    current_user_payload = await verify_token({"credentials": access_token})
+    current_user = await get_current_user(current_user_payload)
     workflow = TeamLeadWorkflow()
+
+    subtask_data = {
+        "name": subtask_name,
+        "description": subtask_description,
+    }
+    if subtask_priority:
+        subtask_data["priority"] = subtask_priority
+    if subtask_due_date:
+        subtask_data["due_date"] = subtask_due_date
+    if subtask_milestone_id:
+        subtask_data["milestone_id"] = subtask_milestone_id
+    if subtask_tags:
+        subtask_data["tags"] = subtask_tags
+
     try:
         return workflow.create_subtask(current_user["id"], task_id, subtask_data)
     except PermissionError as e:
@@ -255,20 +275,23 @@ async def create_subtask(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 @router.get("/tasks/{task_id}/subtasks", response_model=List[Dict])
-async def get_subtasks(task_id: str, current_user: Dict = Depends(get_current_user)):
+async def get_subtasks(task_id: str):
     """Get all subtasks for a task"""
-    workflow = UserWorkflow()
+    current_user_payload = await verify_token({"credentials": access_token})
+    current_user = await get_current_user(current_user_payload)
+    user_workflow = UserWorkflow()
+    workflow = TeamLeadWorkflow()
     try:
         # Get the task to check the project
         task = workflow.get_task_details(task_id)
         
         # Check if user has access to this project
-        user_role = workflow.get_user_role_in_project(current_user["id"], task["project_id"])
+        user_role = user_workflow.get_user_role_in_project(current_user["id"], task["project_id"])
         if not user_role:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You don't have access to this project")
         
         # Get subtasks
-        return workflow.get_subtasks(task_id)
+        return workflow.get_subtasks_details(task_id)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
@@ -276,9 +299,10 @@ async def get_subtasks(task_id: str, current_user: Dict = Depends(get_current_us
 async def update_subtask(
     subtask_id: str,
     subtask_data: Dict,
-    current_user: Dict = Depends(get_current_user)
 ):
     """Update a subtask (Team Lead can update all fields)"""
+    current_user_payload = await verify_token({"credentials": access_token})
+    current_user = await get_current_user(current_user_payload)
     workflow = TeamLeadWorkflow()
     try:
         return workflow.update_subtask(current_user["id"], subtask_id, subtask_data)
@@ -288,8 +312,10 @@ async def update_subtask(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 @router.delete("/subtasks/{subtask_id}", response_model=Dict)
-async def delete_subtask(subtask_id: str, current_user: Dict = Depends(get_current_user)):
+async def delete_subtask(subtask_id: str):
     """Delete a subtask (Team Lead only)"""
+    current_user_payload = await verify_token({"credentials": access_token})
+    current_user = await get_current_user(current_user_payload)
     workflow = TeamLeadWorkflow()
     try:
         return workflow.delete_subtask(current_user["id"], subtask_id)
@@ -301,13 +327,14 @@ async def delete_subtask(subtask_id: str, current_user: Dict = Depends(get_curre
 @router.post("/teams/{team_id}/members", response_model=Dict)
 async def add_team_member(
     team_id: str,
-    member_data: Dict,
-    current_user: Dict = Depends(get_current_user)
+    member_id : str,
 ):
+    current_user_payload = await verify_token({"credentials": access_token})
+    current_user = await get_current_user(current_user_payload)
     """Add a member to a team (Team Lead)"""
     workflow = TeamLeadWorkflow()
     try:
-        return {"success": workflow.add_team_member(current_user["id"], team_id, member_data["user_id"])}
+        return {"success": workflow.add_team_member(current_user["id"], team_id, member_id)}
     except PermissionError as e:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
     except ValueError as e:
@@ -317,9 +344,10 @@ async def add_team_member(
 async def remove_team_member(
     team_id: str,
     user_id: str,
-    current_user: Dict = Depends(get_current_user)
 ):
     """Remove a member from a team (Team Lead)"""
+    current_user_payload = await verify_token({"credentials": access_token})
+    current_user = await get_current_user(current_user_payload)
     workflow = TeamLeadWorkflow()
     try:
         return {"success": workflow.remove_team_member(current_user["id"], team_id, user_id)}

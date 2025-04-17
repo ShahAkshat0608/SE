@@ -20,15 +20,15 @@ class TeamLeadWorkflow(BaseWorkflow):
         self.subtask_dal = SubtaskDAL()
     
     def create_subtask(self, user_id: str, task_id: str, subtask_data: Dict) -> Dict:
-        """Create a subtask for a task (team lead only)"""
+        """Create a subtask for a task (team lead or Project Manager)"""
         # Get task details to get project_id
         task = self.task_service.getTask(task_id)
         if not task:
             raise ValueError(f"Task with ID {task_id} not found")
         
         # Check user has TEAM_LEAD role in this project
-        if not self.role_service.hasTeamLeadAccess(user_id, task.project_id):
-            raise PermissionError("Only team leads can create subtasks")
+        if not self.role_service.hasTeamLeadAccess(user_id, task.project_id) and not self.role_service.hasProjectManagerAccess(user_id, task.project_id):
+            raise PermissionError("Only team leads or Project Managers can create subtasks")
         
         # Create subtask
         subtask = Subtask(
@@ -38,7 +38,7 @@ class TeamLeadWorkflow(BaseWorkflow):
             project_id=task.project_id,
             priority=subtask_data.get('priority', 'MEDIUM'),
             due_date=datetime.fromisoformat(subtask_data['due_date']) if 'due_date' in subtask_data else None,
-            milestone_id=subtask_data.get('milestone_id'),
+            milestone_id=subtask_data.get('milestone_id' , None),
             estimated_hours=subtask_data.get('estimated_hours', 0),
             tags=subtask_data.get('tags', [])
         )
@@ -75,6 +75,11 @@ class TeamLeadWorkflow(BaseWorkflow):
             except ValueError:
                 # User may already have a role in this project
                 pass
+            return {"success": True}
+        else:
+            # If adding the member failed, we should not assign a role
+            return {"success": False , "message": "Team member could not be added"}
+        
         
         return result
     
@@ -122,13 +127,69 @@ class TeamLeadWorkflow(BaseWorkflow):
         
         # Get comprehensive analytics
         return self.analytics_client.get_team_comprehensive(team_id, team.project_id)
-        
     
-    def update_subtask(self, subtask_id: str, update_data: Dict[str, Any]) -> Optional[Subtask]:
-        pass
+    def get_task_details(self, task_id: str) -> Dict:
+        """Get task details (team lead or project manager)"""
+        # Get task details
+        task = self.task_service.getTask(task_id)
+        if not task:
+            raise ValueError(f"Task with ID {task_id} not found")
         
-    def delete_subtask(self, subtask_id: str) -> bool:
-        pass
+        return task.to_dict()
+
+    def get_subtasks_details(self, task_id: str) -> Dict:
+        """Get all subtasks for a task (team lead or project manager)"""
+        # Get task details
+        task = self.task_service.getTask(task_id)
+        if not task:
+            raise ValueError(f"Task with ID {task_id} not found")
+        
+        # Get all subtasks for the task
+        subtasks = self.subtask_dal.get_subtasks_by_task(task_id)
+        return [subtask.to_dict() for subtask in subtasks]
+    
+    def update_subtask(self, user_id : str , subtask_id: str, update_data: Dict[str, Any]) -> Optional[Subtask]:
+        """Update a subtask (team lead or project manager)"""
+        # Get subtask details
+        subtask = self.subtask_dal.get_subtask(subtask_id)
+        if not subtask:
+            raise ValueError(f"Subtask with ID {subtask_id} not found")
+        # Check if user is team lead for this project
+        if not self.role_service.hasTeamLeadAccess(user_id, subtask.project_id) and not self.role_service.hasProjectManagerAccess(user_id, subtask.project_id):
+            raise PermissionError("Only team leads or project managers can update subtasks")
+        
+        # Update the subtask and check if the fields are present in the update_data and are not None
+        if 'task_id' in update_data and update_data['task_id'] is not None:
+            subtask.task_id = update_data['task_id']
+        if 'name' in update_data and update_data['name'] is not None:
+            subtask.name = update_data['name']
+        if 'description' in update_data and update_data['description'] is not None:
+            subtask.description = update_data['description']
+        if 'priority' in update_data and update_data['priority'] is not None:
+            subtask.priority = update_data['priority']
+        if 'due_date' in update_data and update_data['due_date'] is not None:
+            subtask.due_date = datetime.fromisoformat(update_data['due_date'])
+        if 'is_completed' in update_data and update_data['is_completed'] is not None:
+            subtask.is_completed = update_data['is_completed']
+        
+        # Update the subtask in the database
+        self.subtask_dal.update_subtask(subtask_id, subtask)
+        return subtask.to_dict()
+        
+    def delete_subtask(self, user_id , subtask_id: str) -> bool:
+        """Delete a subtask (team lead or project manager)"""
+        # Get subtask details
+        subtask = self.subtask_dal.get_subtask(subtask_id)
+        if not subtask:
+            raise ValueError(f"Subtask with ID {subtask_id} not found")
+        
+        # Check if user is team lead for this project
+        if not self.role_service.hasTeamLeadAccess(user_id, subtask.project_id) and not self.role_service.hasProjectManagerAccess(user_id, subtask.project_id):
+            raise PermissionError("Only team leads or project managers can delete subtasks")
+        
+        # Delete the subtask
+        self.subtask_dal.delete_subtask(subtask_id)
+        return {"success": True}
     
     def add_dependency(self, subtask_id: str, depends_on_id: str) -> bool:
         pass

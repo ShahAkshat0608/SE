@@ -217,29 +217,44 @@ def insert_sample_data():
 # insert_sample_data()
 
 # command to get the current table names
-cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
-tables = cursor.fetchall()
-print("Tables in the database:")
-for table in tables:
-    print(table[0])
+# cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+# tables = cursor.fetchall()
+# print("Tables in the database:")
+# for table in tables:
+#     print(table[0])
 
-# get the entried table projects
-cursor.execute("SELECT * FROM projects;")
-rows = cursor.fetchall()    
-print("Entries in the projects table:")
+# # get the entried table projects
+# cursor.execute("SELECT * FROM projects;")
+# rows = cursor.fetchall()    
+# print("Entries in the projects table:")
+# for row in rows:
+#     print(row)
+
+# # ALTER teams table to add type , created_at and updated_at columns
+# cursor.execute("""
+# ALTER TABLE teams
+# ADD COLUMN created_at TEXT DEFAULT CURRENT_TIMESTAMP;
+# """)
+
+# cursor.execute("""
+# ALTER TABLE teams
+# ADD COLUMN updated_at TEXT DEFAULT CURRENT_TIMESTAMP;
+# """)
+
+# print all the entries in the teams table
+cursor.execute("SELECT * FROM team_members;")
+rows = cursor.fetchall()
+print("Entries in the teams members table:")
 for row in rows:
     print(row)
 
-# ALTER teams table to add type , created_at and updated_at columns
-cursor.execute("""
-ALTER TABLE teams
-ADD COLUMN created_at TEXT DEFAULT CURRENT_TIMESTAMP;
-""")
+# same with roles table
+cursor.execute("SELECT * FROM roles;")
+rows = cursor.fetchall()
+print("Entries in the roles table:")
+for row in rows:
+    print(row)
 
-cursor.execute("""
-ALTER TABLE teams
-ADD COLUMN updated_at TEXT DEFAULT CURRENT_TIMESTAMP;
-""")
 
 # Commit changes and close the connection
 conn.commit()

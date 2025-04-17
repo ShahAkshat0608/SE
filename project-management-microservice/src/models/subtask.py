@@ -40,7 +40,7 @@ class Subtask:
             "name": self.name,
             "description": self.description,
             "project_id": self.project_id,
-            "priority": self.priority.value,
+            "priority": self.priority,
             "due_date": self.due_date.isoformat() if self.due_date else None,
             "completed": self.completed,
             "created_at": self.created_at.isoformat() if self.created_at else None,
