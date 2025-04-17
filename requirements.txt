@@ -1,0 +1,12 @@
+click
+Werkzeug
+fastapi
+uvicorn[standard]
+requests
+pydantic
+pydantic[email]
+httpx
+pydantic-settings # For config loading
+
+# Testing
+pytest 

@@ -1,11 +1,17 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
-    name="task-manager",
-    version="0.1.0",
-    py_modules=["cli", "task_manager", "storage", "task"],
+    name="task-manager-monorepo",
+    version="0.2.0",
+    packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
     install_requires=[
         "click",
+        "Werkzeug",
+        "fastapi",
+        "uvicorn[standard]",
+        "requests",
+        "pydantic",
+        "pydantic-settings",
     ],
     entry_points="""
         [console_scripts]
