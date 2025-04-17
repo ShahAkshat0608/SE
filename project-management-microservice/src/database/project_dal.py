@@ -1,10 +1,19 @@
 import sqlite3
 from typing import List, Optional
+DEFAULT_DB_PATH = "/Users/sarthak/Desktop/IIIT Course Work/Sem8/SE/project-3/SE/project-management-microservice/src/database/project_management.db"
 
 class ProjectDAL:
-    def __init__(self, db_path="project_management.db"):
-        self.conn = sqlite3.connect(db_path)
+    def __init__(self, db_path=DEFAULT_DB_PATH):
+        self.db_path = db_path
+        self.conn = sqlite3.connect(DEFAULT_DB_PATH)
         self.conn.row_factory = sqlite3.Row
+    
+    def get_project_by_name(self, project_name: str) -> Optional[dict]:
+        """Fetch a project by name."""
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT * FROM projects WHERE name = ?", (project_name,))
+        row = cursor.fetchone()
+        return dict(row) if row else None
 
     def get_project(self, project_id: str) -> Optional[dict]:
         """Fetch a project by ID."""

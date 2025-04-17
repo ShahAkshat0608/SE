@@ -19,11 +19,13 @@ JWT_SECRET_KEY = "your-secret-key-for-development-only"  # Use env vars in produ
 JWT_ALGORITHM = "HS256"
 TOKEN_EXPIRE_MINUTES = 60 * 24  # 24 hours
 
-async def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)) -> Dict:
+async def verify_token(credentials : Dict) -> Dict:
+    # print("Verifying token:", credentials.keys())
     """Verify JWT token and return payload"""
     try:
+        # print(f"Verifying token: {credentials['credentials']}")
         payload = jwt.decode(
-            credentials.credentials,
+            credentials['credentials'],
             JWT_SECRET_KEY,
             algorithms=[JWT_ALGORITHM]
         )
@@ -37,6 +39,7 @@ async def verify_token(credentials: HTTPAuthorizationCredentials = Depends(secur
         
         return payload
     except jwt.PyJWTError:
+        print("Invalid token")
         raise HTTPException(
             status_code=401,
             detail="Invalid authentication credentials"
@@ -65,9 +68,11 @@ def create_test_token(user_id: str, role: str) -> str:
     return create_access_token(token_data)
 
 async def get_current_user(token: Dict = Depends(verify_token)) -> Dict:
+    print("Get current user from token:", token)
     """Get current user from token"""
     return {
-        "user_id": token.get("sub"),
+        "id": token.get("sub"),
         "role": token.get("role", "user"),
-        "name": token.get("name", "Unknown User")
+        "name": token.get("name", "Unknown User"),
+        "email": token.get("email", ""),
     }

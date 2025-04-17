@@ -12,6 +12,13 @@ class ProjectService:
         self.project_dal.add_project(project.to_dict())
         return project
 
+    def getProjectByName(self, projectName: str) -> Project:
+        """Get a project by its name."""
+        project_data = self.project_dal.get_project_by_name(projectName)
+        if not project_data:
+            raise ValueError(f"Project with name {projectName} not found.")
+        return Project.from_dict(project_data)
+
     def getProject(self, projectId: UUID) -> Project:
         """Get a project by its ID."""
         project_data = self.project_dal.get_project(str(projectId))
@@ -58,3 +65,5 @@ class ProjectService:
             if project["project_manager_id"] == str(managerId)
         ]
         return manager_projects
+
+    

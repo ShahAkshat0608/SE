@@ -4,12 +4,12 @@ from ..models.task import Task
 from ..database.task_dal import TaskDAL
 
 class TaskService:
-    def __init__(self, task_dal: TaskDAL):
-        self.task_dal = task_dal
+    def __init__(self, task_dal: TaskDAL = None):
+        self.task_dal = task_dal or TaskDAL()
 
     def createTask(self, task: Task) -> Task:
         """Create a new task."""
-        task_dict = task.dict()  # Convert Task object to dictionary
+        task_dict = task.to_dict()
         self.task_dal.add_task(task_dict)
         return task
 
@@ -40,6 +40,11 @@ class TaskService:
     def getTasksByProject(self, projectId: UUID) -> List[Task]:
         """Fetch all tasks for a specific project."""
         tasks_data = self.task_dal.get_tasks_by_project(str(projectId))
+        return [Task(**task_data) for task_data in tasks_data]
+
+    def getTasksByTeam(self, projectId : UUID , teamId: UUID) -> List[Task]:
+        """Fetch all tasks for a specific team."""
+        tasks_data = self.task_dal.get_tasks_by_team(str(teamId))
         return [Task(**task_data) for task_data in tasks_data]
 
     def assignTaskToTeam(self, taskId: UUID, teamId: UUID) -> bool:

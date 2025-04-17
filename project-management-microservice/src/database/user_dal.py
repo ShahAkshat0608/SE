@@ -1,8 +1,9 @@
 import sqlite3
 from typing import List, Optional
+DEFAULT_DB_PATH = "/Users/sarthak/Desktop/IIIT Course Work/Sem8/SE/project-3/SE/project-management-microservice/src/database/project_management.db"
 
 class UserDAL:
-    def __init__(self, db_path="project_management.db"):
+    def __init__(self, db_path=DEFAULT_DB_PATH):
         self.conn = sqlite3.connect(db_path)
         self.conn.row_factory = sqlite3.Row
 

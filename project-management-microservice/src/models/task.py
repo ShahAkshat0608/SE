@@ -43,8 +43,8 @@ class Task:
             "description": self.description,
             "status": self.status.value,
             "priority": self.priority.value,
-            "created_at": self.created_at.isoformat() if self.created_at else None,
-            "target_due_date": self.target_due_date.isoformat() if self.target_due_date else None,
+            "created_at": self.created_at if self.created_at else None,
+            "target_due_date": self.target_due_date if self.target_due_date else None,
             "assigned_team_id": self.assigned_team_id,
             "requirements": self.requirements
         }

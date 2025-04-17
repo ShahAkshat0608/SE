@@ -27,15 +27,16 @@ class UserWorkflow(BaseWorkflow):
         """
         # Create the project
         project = Project(
-            name=project_data['name'],
-            description=project_data.get('description', ''),
+            id=f"project-{str(uuid4())[:8]}",
+            name=project_data['name'] if 'name' in project_data else 'sample_project',
+            description=project_data.get('description', '') ,
             status=ProjectStatus(project_data.get('status', 'PLANNING')),
             start_date=datetime.fromisoformat(project_data.get('start_date', datetime.now().isoformat())),
             target_end_date=datetime.fromisoformat(project_data['target_end_date']) if 'target_end_date' in project_data else None,
             project_manager_id=project_data.get('project_manager_id', user_id),
             priority=TaskPriority(project_data.get('priority', 'MEDIUM')),
-            client=project_data.get('client'),
-            department=project_data.get('department')
+            client=project_data.get('client') if 'client' in project_data else None,
+            department=project_data.get('department') if 'department' in project_data else None,
         )
         
         created_project = self.project_service.createProject(project)

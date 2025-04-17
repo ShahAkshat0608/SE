@@ -41,6 +41,7 @@ def create_tables():
         name TEXT NOT NULL,
         project_id TEXT NOT NULL,
         team_lead_id TEXT NOT NULL,
+        type TEXT, -- Enum: RESEARCH, ANALYSIS, etc.
         FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
         FOREIGN KEY (team_lead_id) REFERENCES users(id) ON DELETE CASCADE
     );
@@ -212,8 +213,33 @@ def insert_sample_data():
 
 # Run the setup
 
-create_tables()
+# create_tables()
 # insert_sample_data()
+
+# command to get the current table names
+cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+tables = cursor.fetchall()
+print("Tables in the database:")
+for table in tables:
+    print(table[0])
+
+# get the entried table projects
+cursor.execute("SELECT * FROM projects;")
+rows = cursor.fetchall()    
+print("Entries in the projects table:")
+for row in rows:
+    print(row)
+
+# ALTER teams table to add type , created_at and updated_at columns
+cursor.execute("""
+ALTER TABLE teams
+ADD COLUMN created_at TEXT DEFAULT CURRENT_TIMESTAMP;
+""")
+
+cursor.execute("""
+ALTER TABLE teams
+ADD COLUMN updated_at TEXT DEFAULT CURRENT_TIMESTAMP;
+""")
 
 # Commit changes and close the connection
 conn.commit()

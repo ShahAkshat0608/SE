@@ -12,9 +12,12 @@ from ..services.clients.user_management_client import APIClient
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from datetime import timedelta
 import time
+from ..utils.auth_token_gen import create_access_token
+from ..utils.auth_utils import verify_token
 
 router = APIRouter()
 user_client = APIClient()
+access_token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIyIiwiZW1haWwiOiJhYmNAZ21haWwuY29tIiwiZXhwIjoxNzQ0OTYzNzQwLjc4NjM5NH0.bILP83gyTl1BVC-AnNj6nRlWeJtKKej0VKDr1jJXZbk"
 
 # --- User Workflow Endpoints ---
 
@@ -30,24 +33,11 @@ async def create_project(project_data: Dict, current_user: Dict = Depends(get_cu
     workflow = UserWorkflow()
     return workflow.create_project(current_user["id"], project_data)
 
-@router.get("/projects/{project_id}", response_model=Dict)
-async def get_project_details(project_id: str, current_user: Dict = Depends(get_current_user)):
-    """Get project details"""
-    workflow = UserWorkflow()
-    try:
-        # Check if user has access to this project
-        user_role = workflow.get_user_role_in_project(current_user["id"], project_id)
-        if not user_role:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You don't have access to this project")
-        
-        # Get project details
-        return workflow.get_project_details(project_id)
-    except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
-
 @router.get("/projects/{project_id}/role", response_model=Dict)
-async def get_user_role_in_project(project_id: str, current_user: Dict = Depends(get_current_user)):
+async def get_user_role_in_project(project_id: str):
     """Get current user's role in a specific project"""
+    current_user_payload = await verify_token({"credentials": access_token})
+    current_user = await get_current_user(current_user_payload)
     workflow = UserWorkflow()
     role = workflow.get_user_role_in_project(current_user["id"], project_id)
     if not role:
@@ -56,14 +46,47 @@ async def get_user_role_in_project(project_id: str, current_user: Dict = Depends
 
 # --- Project Manager Endpoints ---
 
+@router.get("/projects/{project_name}")
+async def get_project_details(project_name: str):
+    """Get project details"""
+    workflow = ProjectManagerWorkflow()
+    current_user_payload = await verify_token({"credentials": access_token})
+    current_user = await get_current_user(current_user_payload)
+    try:
+        project_details = workflow.get_project_details_by_name(project_name)
+
+        # Check if user has access to this project
+        user_role = workflow.get_user_role_in_project(current_user["id"], project_details["id"])
+        if not user_role:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You don't have access to this project")
+        
+        # # Get project details
+        # return workflow.get_project_details(project_id)
+        return project_details
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    
 @router.post("/projects/{project_id}/milestones", response_model=Dict)
 async def create_milestone(
     project_id: str, 
-    milestone_data: Dict, 
-    current_user: Dict = Depends(get_current_user)
+    milestone_name : str,
+    milestone_description: str,
+    milestone_sequence_no: int,
+   # milestone due date is a string in ISO format and optional
+    milestone_due_date: Optional[str] = None,
 ):
     """Create a milestone (Project Manager)"""
+    current_user_payload = await verify_token({"credentials": access_token})
+    current_user = await get_current_user(current_user_payload)
     workflow = ProjectManagerWorkflow()
+
+    milestone_data = {
+        "name": milestone_name,
+        "description": milestone_description,
+        "sequence_no": milestone_sequence_no,
+    }
+    if milestone_due_date:
+        milestone_data["due_date"] = milestone_due_date
     try:
         return workflow.create_milestone(current_user["id"], project_id, milestone_data)
     except PermissionError as e:
@@ -72,28 +95,40 @@ async def create_milestone(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 @router.get("/projects/{project_id}/milestones", response_model=List[Dict])
-async def get_milestones(project_id: str, current_user: Dict = Depends(get_current_user)):
+async def get_milestones(project_id: str):
     """Get all milestones for a project"""
-    workflow = UserWorkflow()
+    current_user_payload = await verify_token({"credentials": access_token})
+    current_user = await get_current_user(current_user_payload)
+    user_workflow = UserWorkflow()
+    project_workflow = ProjectManagerWorkflow()
     try:
         # Check if user has access to this project
-        user_role = workflow.get_user_role_in_project(current_user["id"], project_id)
+        user_role = user_workflow.get_user_role_in_project(current_user["id"], project_id)
         if not user_role:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You don't have access to this project")
         
         # Get milestones
-        return workflow.get_milestones(project_id)
+        return project_workflow.get_milestones(project_id)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 @router.post("/projects/{project_id}/teams", response_model=Dict)
 async def create_team(
     project_id: str, 
-    team_data: Dict, 
-    current_user: Dict = Depends(get_current_user)
-):
+    team_name: str,
+    team_lead_id: str,
+    team_type: Optional[str] = None,
+):  
+    current_user_payload = await verify_token({"credentials": access_token})
+    current_user = await get_current_user(current_user_payload)
     """Create a team (Project Manager)"""
     workflow = ProjectManagerWorkflow()
+
+    team_data = {
+        "name": team_name,
+        "team_lead_id": team_lead_id,
+        "type": team_type or 'DEFAULT',
+    }
     try:
         return workflow.create_team(current_user["id"], project_id, team_data)
     except PermissionError as e:
@@ -102,17 +137,20 @@ async def create_team(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 @router.get("/projects/{project_id}/teams", response_model=List[Dict])
-async def get_teams(project_id: str, current_user: Dict = Depends(get_current_user)):
+async def get_teams(project_id: str):
+    current_user_payload = await verify_token({"credentials": access_token})
+    current_user = await get_current_user(current_user_payload)
     """Get all teams for a project"""
-    workflow = UserWorkflow()
+    user_workflow = UserWorkflow()
+    project_workflow = ProjectManagerWorkflow()
     try:
         # Check if user has access to this project
-        user_role = workflow.get_user_role_in_project(current_user["id"], project_id)
+        user_role = user_workflow.get_user_role_in_project(current_user["id"], project_id)
         if not user_role:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You don't have access to this project")
         
         # Get teams
-        return workflow.get_teams(project_id)
+        return project_workflow.get_teams(project_id)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
@@ -120,10 +158,25 @@ async def get_teams(project_id: str, current_user: Dict = Depends(get_current_us
 async def create_task(
     project_id: str,
     team_id: str,
-    task_data: Dict,
-    current_user: Dict = Depends(get_current_user)
+    task_name: str,
+    task_description: str,
+    task_status: Optional[str] = "TO_DO",
+    task_due_date: Optional[str] = None,
+    task_priority: Optional[str] = "MEDIUM",
 ):
     """Create a task for a team (Project Manager)"""
+    current_user_payload = await verify_token({"credentials": access_token})
+    current_user = await get_current_user(current_user_payload)
+
+    task_data = {
+        "name": task_name,
+        "description": task_description,
+        "status": task_status,
+        "priority": task_priority,
+    }
+    if task_due_date:
+        task_data["target_due_date"] = task_due_date
+
     workflow = ProjectManagerWorkflow()
     try:
         return workflow.create_task(current_user["id"], project_id, team_id, task_data)
@@ -133,17 +186,20 @@ async def create_task(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 @router.get("/projects/{project_id}/tasks", response_model=List[Dict])
-async def get_project_tasks(project_id: str, current_user: Dict = Depends(get_current_user)):
+async def get_project_tasks(project_id: str):
     """Get all tasks for a project"""
-    workflow = UserWorkflow()
+    current_user_payload = await verify_token({"credentials": access_token})
+    current_user = await get_current_user(current_user_payload)
+    user_workflow = UserWorkflow()
+    project_workflow = ProjectManagerWorkflow()
     try:
         # Check if user has access to this project
-        user_role = workflow.get_user_role_in_project(current_user["id"], project_id)
+        user_role = user_workflow.get_user_role_in_project(current_user["id"], project_id)
         if not user_role:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You don't have access to this project")
         
         # Get tasks
-        return workflow.get_tasks(project_id)
+        return project_workflow.get_tasks(project_id)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
@@ -151,24 +207,28 @@ async def get_project_tasks(project_id: str, current_user: Dict = Depends(get_cu
 async def get_team_tasks(
     project_id: str,
     team_id: str,
-    current_user: Dict = Depends(get_current_user)
 ):
     """Get all tasks for a specific team"""
-    workflow = UserWorkflow()
+    current_user_payload = await verify_token({"credentials": access_token})
+    current_user = await get_current_user(current_user_payload)
+    user_workflow = UserWorkflow()
+    project_workflow = ProjectManagerWorkflow()
     try:
         # Check if user has access to this project
-        user_role = workflow.get_user_role_in_project(current_user["id"], project_id)
+        user_role = user_workflow.get_user_role_in_project(current_user["id"], project_id)
         if not user_role:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You don't have access to this project")
         
         # Get team tasks
-        return workflow.get_tasks(project_id, team_id)
+        return project_workflow.get_tasks_by_team(project_id, team_id)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 @router.get("/projects/{project_id}/analytics", response_model=Dict)
-async def view_project_analytics(project_id: str, current_user: Dict = Depends(get_current_user)):
+async def view_project_analytics(project_id: str):
     """View analytics for a project (Project Manager)"""
+    current_user_payload = await verify_token({"credentials": access_token})
+    current_user = await get_current_user(current_user_payload)
     workflow = ProjectManagerWorkflow()
     try:
         return workflow.view_project_analytics(current_user["id"], project_id)
@@ -422,19 +482,19 @@ async def register_user(
         "user": response
     }
 
-@router.post("/auth/login", response_model=Dict)
-async def login_user(form_data: OAuth2PasswordRequestForm = Depends()):
+@router.post("/auth/login", response_model=Dict , status_code=status.HTTP_200_OK)
+async def login_user(email : str, password: str):
     """
     Login a user and return access token
     """
     # Basic input validation
-    if not all([form_data.username.strip(), form_data.password.strip()]):
+    if not all([email.strip(), password.strip()]):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email and password are required and cannot be empty"
         )
 
-    auth_response = user_client.login_user(form_data.username, form_data.password)
+    auth_response = user_client.login_user(email, password)
     
     if "error" in auth_response:
         raise HTTPException(
@@ -446,8 +506,8 @@ async def login_user(form_data: OAuth2PasswordRequestForm = Depends()):
     user = auth_response  # Response is user data directly
     access_token_expires = timedelta(days=30)
     access_token = create_access_token(
-        data={"sub": str(user.get("id")), "username": user.get("email")},
-        expires_delta=access_token_expires
+        data={"sub": str(user.get("id")), "email": user.get("email")},
+        # expires_delta=access_token_expires
     )
     
     return {

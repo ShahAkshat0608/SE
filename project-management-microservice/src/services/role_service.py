@@ -182,4 +182,4 @@ class RoleService:
             userId: The UUID of the user
             projectId: The UUID of the project
         """
-        return self.role_dal.get_role_by_user_and_project(user_id_str, project_id_str).role
+        return self.role_dal.get_role_by_user_and_project(userId, projectId)

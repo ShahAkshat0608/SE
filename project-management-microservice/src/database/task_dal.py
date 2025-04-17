@@ -1,8 +1,9 @@
 import sqlite3
 from typing import List, Optional
+DEFAULT_DB_PATH = "/Users/sarthak/Desktop/IIIT Course Work/Sem8/SE/project-3/SE/project-management-microservice/src/database/project_management.db"
 
 class TaskDAL:
-    def __init__(self, db_path="project_management.db"):
+    def __init__(self, db_path=DEFAULT_DB_PATH):
         self.conn = sqlite3.connect(db_path)
         self.conn.row_factory = sqlite3.Row
 
@@ -17,6 +18,13 @@ class TaskDAL:
         """Fetch all tasks for a project."""
         cursor = self.conn.cursor()
         cursor.execute("SELECT * FROM tasks WHERE project_id = ?", (project_id,))
+        rows = cursor.fetchall()
+        return [dict(row) for row in rows]
+
+    def get_tasks_by_team(self, project_id: str , team_id: str) -> List[dict]:
+        """Fetch all tasks for a specific team."""
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT * FROM tasks WHERE project_id = ? AND team_id = ?", (project_id, team_id))
         rows = cursor.fetchall()
         return [dict(row) for row in rows]
 

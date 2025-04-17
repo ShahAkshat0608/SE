@@ -3,6 +3,12 @@ import uvicorn
 from fastapi import FastAPI, Depends, HTTPException, status, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.security import HTTPBearer
+from fastapi.openapi.models import APIKey
+from fastapi.openapi.models import SecuritySchemeType
+from fastapi.openapi.utils import get_openapi
+from fastapi import Security
+
 from datetime import datetime, timedelta
 from typing import Dict
 import os
@@ -51,46 +57,73 @@ app.include_router(api_router, prefix="/api")
 # Authentication routes directly in main.py
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
-@app.post("/api/auth/login", response_model=Dict)
-async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
-    """
-    OAuth2 compatible token endpoint for user login that delegates to user management service
-    """
-    # Call the user management service to authenticate the user
-    auth_response = user_client.login_user(form_data.username, form_data.password)
-    
-    # Check if there was an error in the response
-    if "error" in auth_response:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=auth_response.get("detail", "Authentication failed"),
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    
-    # User management service validated the user
-    user = auth_response.get("user", {})
-    
-    # Use token from user management service if provided, otherwise create our own
-    if "access_token" in auth_response:
-        access_token = auth_response["access_token"]
-    else:
-        # Create access token with 30-day expiry (adjust as needed)
-        access_token_expires = timedelta(days=30)
-        access_token = create_access_token(
-            data={"sub": user["id"], "username": user.get("email")},
-            expires_delta=access_token_expires
-        )
-    
-    return {
-        "access_token": access_token,
-        "token_type": "bearer",
-        "user": {
-            "id": user.get("id"),
-            "name": user.get("name"),
-            "email": user.get("email"),
-            "role": user.get("role", "user")  # Include role if provided
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+    openapi_schema = get_openapi(
+        title="Project Management API",
+        version="1.0.0",
+        description="API for role-based project management system",
+        routes=app.routes,
+    )
+    openapi_schema["components"]["securitySchemes"] = {
+        "BearerAuth": {
+            "type": "http",
+            "scheme": "bearer",
+            "bearerFormat": "JWT"
         }
     }
+    for path in openapi_schema["paths"]:
+        for method in openapi_schema["paths"][path]:
+            if "security" not in openapi_schema["paths"][path][method]:
+                openapi_schema["paths"][path][method]["security"] = [{"BearerAuth": []}]
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+app.openapi = custom_openapi
+
+
+# @app.post("/api/auth/login", response_model=Dict)
+# async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
+#     """
+#     OAuth2 compatible token endpoint for user login that delegates to user management service
+#     """
+#     # Call the user management service to authenticate the user
+#     print("Form data:", form_data)
+#     auth_response = user_client.login_user(form_data.username, form_data.password)
+    
+#     # Check if there was an error in the response
+#     if "error" in auth_response:
+#         raise HTTPException(
+#             status_code=status.HTTP_401_UNAUTHORIZED,
+#             detail=auth_response.get("detail", "Authentication failed"),
+#             headers={"WWW-Authenticate": "Bearer"},
+#         )
+    
+#     # User management service validated the user
+#     user = auth_response.get("user", {})
+    
+#     # Use token from user management service if provided, otherwise create our own
+#     if "access_token" in auth_response:
+#         access_token = auth_response["access_token"]
+#     else:
+#         # Create access token with 30-day expiry (adjust as needed)
+#         access_token_expires = timedelta(days=30)
+#         access_token = create_access_token(
+#             data={"sub": user["id"], "username": user.get("email")},
+#             # expires_delta=access_token_expires
+#         )
+    
+#     return {
+#         "access_token": access_token,
+#         "token_type": "bearer",
+#         "user": {
+#             "id": user.get("id"),
+#             "name": user.get("name"),
+#             "email": user.get("email"),
+#             "role": user.get("role", "user")  # Include role if provided
+#         }
+#     }
 
 @app.post("/api/auth/register", response_model=Dict)
 async def register_user(name: str, email: str, password: str, contact: str = None):

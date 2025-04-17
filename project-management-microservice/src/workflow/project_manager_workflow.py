@@ -9,6 +9,7 @@ from ..models.role import Role
 from ..services.team_service import TeamService
 from ..services.milestone_service import MilestoneService
 from ..services.task_service import TaskService
+from ..services.project_service import ProjectService
 from ..services.clients.analytics_client import AnalyticsServiceClient
 from ..models.enums import RoleType
 
@@ -19,7 +20,16 @@ class ProjectManagerWorkflow(BaseWorkflow):
         self.milestone_service = MilestoneService()
         self.task_service = TaskService()
         self.analytics_client = AnalyticsServiceClient()
+        self.project_service =  ProjectService() # Assuming this is set in the base class
     
+    def get_project_details_by_name(self, project_name: str) -> Dict:
+        """Get just the project details by name using the project service"""
+        project_service = self.project_service
+        project = project_service.getProjectByName(project_name)
+        if not project:
+            raise ValueError(f"Project with name {project_name} not found.")
+        return project.to_dict()
+ 
     def create_milestone(self, user_id: str, project_id: str, milestone_data: Dict) -> Dict:
         """Create a milestone in a project (project manager only)"""
         # Check user has PROJECT_MANAGER role
@@ -37,7 +47,13 @@ class ProjectManagerWorkflow(BaseWorkflow):
         
         created_milestone = self.milestone_service.createMilestone(milestone)
         return created_milestone.to_dict()
-    
+
+    def get_milestones(self, project_id: str) -> List[Dict]:
+        """Get all milestones for a project (any team member only)"""
+        # Get milestones
+        milestones = self.milestone_service.getMilestonesByProject(project_id)
+        return [milestone.to_dict() for milestone in milestones]
+
     def create_team(self, user_id: str, project_id: str, team_data: Dict) -> Dict:
         """Create a team for a project (project manager only)"""
         # Check user has PROJECT_MANAGER role
@@ -60,7 +76,7 @@ class ProjectManagerWorkflow(BaseWorkflow):
             name=team_data['name'],
             project_id=project_id,
             team_lead_id=team_lead_id,
-            type=team_data.get('type')
+            type=team_data.get('type') or 'DEFAULT',
         )
         
         try:
@@ -75,6 +91,12 @@ class ProjectManagerWorkflow(BaseWorkflow):
         created_team = self.team_service.createTeam(team)
         return created_team.to_dict()
     
+    def get_teams(self, project_id: str) -> List[Dict]:
+        """Get all teams for a project (any team member only)"""
+        # Get teams
+        teams = self.team_service.getTeamsByProject(project_id)
+        return [team.to_dict() for team in teams]
+
     def create_task(self, user_id: str, project_id: str, team_id: str, task_data: Dict) -> Dict:
         """Create a task for a team (project manager only)"""
         # Check user has PROJECT_MANAGER role
@@ -95,6 +117,18 @@ class ProjectManagerWorkflow(BaseWorkflow):
         created_task = self.task_service.createTask(task)
         return created_task.to_dict()
     
+    def get_tasks(self, project_id: str) -> List[Dict]:
+        """Get all tasks for a project (any team member only)"""
+        # Get tasks
+        tasks = self.task_service.getTasksByProject(project_id)
+        return [task.to_dict() for task in tasks]
+    
+    def get_tasks_by_team(self, project_id: str, team_id: str) -> List[Dict]:
+        """Get all tasks for a specific team in a project (any team member only)"""
+        # Get tasks
+        tasks = self.task_service.getTasksByProject(project_id)
+        return [task.to_dict() for task in tasks if task.team_id == team_id]
+
     def view_project_analytics(self, user_id: str, project_id: str) -> Dict:
         """View analytics for a project (project manager)"""
         # Check user has PROJECT_MANAGER role
