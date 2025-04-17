@@ -4,6 +4,8 @@ from uuid import uuid4
 from .base_workflow import BaseWorkflow
 from ..services.team_service import TeamService
 from ..services.task_service import TaskService
+from ..services.role_service import RoleService
+from ..services.task_manager_service import TaskManagerService
 from ..services.clients.analytics_client import AnalyticsServiceClient
 from ..models.subtask import Subtask
 from ..models.role import Role
@@ -18,6 +20,7 @@ class TeamLeadWorkflow(BaseWorkflow):
         # We'll need a SubtaskService that isn't fully implemented in the provided code
         from ..database.subtask_dal import SubtaskDAL
         self.subtask_dal = SubtaskDAL()
+        self.task_manager_service = TaskManagerService()
     
     def create_subtask(self, user_id: str, task_id: str, subtask_data: Dict) -> Dict:
         """Create a subtask for a task (team lead or Project Manager)"""

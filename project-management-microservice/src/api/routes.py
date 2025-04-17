@@ -23,8 +23,10 @@ access_token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIyIiwiZW1haWwiOiJ
 # --- User Workflow Endpoints ---
 
 @router.get("/user/initial-options", response_model=Dict)
-async def get_initial_options(current_user: Dict = Depends(get_current_user)):
+async def get_initial_options():
     """Get initial options for the current user"""
+    current_user_payload = await verify_token({"credentials": access_token})
+    current_user = await get_current_user(current_user_payload)
     workflow = UserWorkflow()
     return workflow.get_initial_options(current_user["id"])
 
@@ -376,8 +378,10 @@ async def assign_subtask(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 @router.get("/teams/{team_id}/analytics", response_model=Dict)
-async def view_team_analytics(team_id: str, current_user: Dict = Depends(get_current_user)):
+async def view_team_analytics(team_id: str):
     """View analytics for a team (Team Lead)"""
+    current_user_payload = await verify_token({"credentials": access_token})
+    current_user = await get_current_user(current_user_payload)
     workflow = TeamLeadWorkflow()
     try:
         return workflow.view_team_analytics(current_user["id"], team_id)
@@ -437,8 +441,10 @@ async def get_assigned_subtasks():
     return workflow.get_assigned_subtasks(current_user["id"])
 
 @router.get("/user/analytics", response_model=Dict)
-async def view_user_analytics(current_user: Dict = Depends(get_current_user)):
+async def view_user_analytics():
     """View analytics for current user (Team Member)"""
+    current_user_payload = await verify_token({"credentials": access_token})
+    current_user = await get_current_user(current_user_payload)
     workflow = TeamMemberWorkflow()
     return workflow.view_user_analytics(current_user["id"])
 

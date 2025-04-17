@@ -1,7 +1,7 @@
 from typing import List
 from uuid import UUID
 
-class TaskManager:
+class TaskManagerService:
     def breakTaskIntoSubtasks(self, taskId: UUID, subtasks: List[dict]) -> List[dict]:
         pass
 
