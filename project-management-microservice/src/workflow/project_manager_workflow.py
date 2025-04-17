@@ -29,7 +29,7 @@ class ProjectManagerWorkflow(BaseWorkflow):
         if not project:
             raise ValueError(f"Project with name {project_name} not found.")
         return project.to_dict()
- 
+    
     def create_milestone(self, user_id: str, project_id: str, milestone_data: Dict) -> Dict:
         """Create a milestone in a project (project manager only)"""
         # Check user has PROJECT_MANAGER role
@@ -137,3 +137,62 @@ class ProjectManagerWorkflow(BaseWorkflow):
         
         # Get comprehensive analytics
         return self.analytics_client.get_project_comprehensive(project_id)
+
+    def get_project_roles(self, user_id: str, project_id: str) -> List[Dict]:
+        """Get all roles for a project (project manager only)"""
+        # Check user has PROJECT_MANAGER role
+        if not self.role_service.hasProjectManagerAccess(user_id, project_id):
+            raise PermissionError("Only project managers can view project roles")
+        
+        # Get roles
+        roles = self.role_service.getProjectRoles(project_id)
+        return [role.to_dict() for role in roles]
+
+    def replace_team_lead(self, user_id: str, project_id: str, team_id: str, new_team_lead_id: str) -> Dict:
+        """Replace the team lead of a team (project manager only)"""
+        # Check user has PROJECT_MANAGER role
+        if not self.role_service.hasProjectManagerAccess(user_id, project_id):
+            raise PermissionError("Only project managers can replace team leads")
+        
+        # Get the team
+        team = self.team_service.getTeam(team_id)
+        if not team:
+            raise ValueError(f"Team with ID {team_id} not found")
+        if team.project_id != project_id:
+            raise ValueError(f"Team with ID {team_id} does not belong to project {project_id}")
+        
+        old_team_id = team.team_lead_id
+        # Update the team lead
+        team.team_lead_id = new_team_lead_id
+        self.team_service.updateTeam(team)
+
+        # update the role of the new team lead
+        role_id = f"role-{str(uuid4())[:8]}"
+        new_team_lead_role = Role(
+            id=role_id, 
+            user_id=new_team_lead_id, 
+            project_id=project_id, 
+            role=RoleType.TEAM_LEAD.value
+        )
+        try:
+            # Try to assign the role (will fail if user already has a role)
+            self.role_service.assignRole(new_team_lead_role)
+        except ValueError:
+            # If user already has a role, update it if needed
+            existing_role = self.role_service.getRoleInProject(new_team_lead_id, project_id)
+            if existing_role != RoleType.PROJECT_MANAGER.value:
+                self.role_service.modifyRole(existing_role.id, RoleType.TEAM_LEAD.value)
+
+        # update the role of the old team lead
+        old_team_lead_role = self.role_service.getRoleInProject(old_team_id, project_id)
+        if old_team_lead_role:
+            self.role_service.modifyRole(old_team_lead_role.id, RoleType.TEAM_MEMBER.value)
+        # Return the updated team
+        team = self.team_service.getTeam(team_id)
+        if not team:
+            raise ValueError(f"Team with ID {team_id} not found")
+        if team.project_id != project_id:
+            raise ValueError(f"Team with ID {team_id} does not belong to project {project_id}")
+
+        return team.to_dict()
+    

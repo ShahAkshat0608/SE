@@ -18,6 +18,7 @@ from ..utils.auth_utils import verify_token
 router = APIRouter()
 user_client = APIClient()
 access_token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIyIiwiZW1haWwiOiJhYmNAZ21haWwuY29tIiwiZXhwIjoxNzQ0OTYzNzQwLjc4NjM5NH0.bILP83gyTl1BVC-AnNj6nRlWeJtKKej0VKDr1jJXZbk"
+# access_token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI1IiwiZW1haWwiOiJqa2xAZ21haWwuY29tIiwiZXhwIjoxNzQ0OTgwNDgwLjQzMzI5fQ.Qw7tGmHqR7Dgj_g_-HxhwuzTpNFMqe9WM5j9Pa0LIiE"
 
 # --- User Workflow Endpoints ---
 
@@ -28,8 +29,10 @@ async def get_initial_options(current_user: Dict = Depends(get_current_user)):
     return workflow.get_initial_options(current_user["id"])
 
 @router.post("/projects", response_model=Dict)
-async def create_project(project_data: Dict, current_user: Dict = Depends(get_current_user)):
+async def create_project(project_data: Dict):
     """Create a new project"""
+    current_user_payload = await verify_token({"credentials": access_token})
+    current_user = await get_current_user(current_user_payload)
     workflow = UserWorkflow()
     return workflow.create_project(current_user["id"], project_data)
 
@@ -359,13 +362,14 @@ async def remove_team_member(
 @router.put("/subtasks/{subtask_id}/assign", response_model=Dict)
 async def assign_subtask(
     subtask_id: str,
-    assign_data: Dict,
-    current_user: Dict = Depends(get_current_user)
+    assign_user_id: str,
 ):
+    current_user_payload = await verify_token({"credentials": access_token})
+    current_user = await get_current_user(current_user_payload)
     """Assign a subtask to a user (Team Lead)"""
     workflow = TeamLeadWorkflow()
     try:
-        return workflow.assign_subtask(current_user["id"], subtask_id, assign_data["user_id"])
+        return workflow.assign_subtask(current_user["id"], subtask_id, assign_user_id)
     except PermissionError as e:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
     except ValueError as e:
@@ -387,16 +391,17 @@ async def view_team_analytics(team_id: str, current_user: Dict = Depends(get_cur
 @router.put("/subtasks/{subtask_id}/completion", response_model=Dict)
 async def update_subtask_completion(
     subtask_id: str,
-    completion_data: Dict,
-    current_user: Dict = Depends(get_current_user)
+    isCompleted: bool,
 ):
     """Update subtask completion status (Team Member)"""
+    current_user_payload = await verify_token({"credentials": access_token})
+    current_user = await get_current_user(current_user_payload)
     workflow = TeamMemberWorkflow()
     try:
         return workflow.update_subtask_completion(
             current_user["id"], 
             subtask_id, 
-            completion_data["is_completed"]
+            isCompleted
         )
     except PermissionError as e:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
@@ -406,16 +411,17 @@ async def update_subtask_completion(
 @router.put("/subtasks/{subtask_id}/milestone", response_model=Dict)
 async def update_subtask_milestone(
     subtask_id: str,
-    milestone_data: Dict,
-    current_user: Dict = Depends(get_current_user)
+    milestone_id: str,
 ):
     """Update subtask milestone (Team Member)"""
+    current_user_payload = await verify_token({"credentials": access_token})
+    current_user = await get_current_user(current_user_payload)
     workflow = TeamMemberWorkflow()
     try:
         return workflow.update_subtask_milestone(
             current_user["id"], 
             subtask_id, 
-            milestone_data["milestone_id"]
+            milestone_id
         )
     except PermissionError as e:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
@@ -423,8 +429,10 @@ async def update_subtask_milestone(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 @router.get("/user/subtasks", response_model=List[Dict])
-async def get_assigned_subtasks(current_user: Dict = Depends(get_current_user)):
+async def get_assigned_subtasks():
     """Get subtasks assigned to current user (Team Member)"""
+    current_user_payload = await verify_token({"credentials": access_token})
+    current_user = await get_current_user(current_user_payload)
     workflow = TeamMemberWorkflow()
     return workflow.get_assigned_subtasks(current_user["id"])
 
@@ -436,15 +444,11 @@ async def view_user_analytics(current_user: Dict = Depends(get_current_user)):
 
 # --- Additional Utility Endpoints ---
 
-@router.get("/users", response_model=List[Dict])
-async def get_users(q: Optional[str] = None, current_user: Dict = Depends(get_current_user)):
-    """Search for users, optionally with a query string"""
-    workflow = UserWorkflow()
-    return workflow.search_users(q)
-
 @router.get("/projects/{project_id}/roles", response_model=List[Dict])
-async def get_project_roles(project_id: str, current_user: Dict = Depends(get_current_user)):
+async def get_project_roles(project_id: str):
     """Get all roles assigned in a project (Project Manager)"""
+    current_user_payload = await verify_token({"credentials": access_token})
+    current_user = await get_current_user(current_user_payload)
     workflow = ProjectManagerWorkflow()
     try:
         return workflow.get_project_roles(current_user["id"], project_id)
@@ -454,19 +458,21 @@ async def get_project_roles(project_id: str, current_user: Dict = Depends(get_cu
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 @router.post("/projects/{project_id}/roles", response_model=Dict)
-async def assign_project_role(
+async def replace_team_lead(
     project_id: str,
-    role_data: Dict,
-    current_user: Dict = Depends(get_current_user)
+    team_id: str,
+    new_team_lead_id: str,
 ):
     """Assign a role to a user in a project (Project Manager only)"""
+    current_user_payload = await verify_token({"credentials": access_token})
+    current_user = await get_current_user(current_user_payload)
     workflow = ProjectManagerWorkflow()
     try:
-        return workflow.assign_project_role(
+        return workflow.replace_team_lead(
             current_user["id"], 
             project_id, 
-            role_data["user_id"], 
-            role_data["role"]
+            team_id,
+            new_team_lead_id
         )
     except PermissionError as e:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
@@ -564,11 +570,14 @@ async def logout_user(current_user: Dict = Depends(get_current_user)):
     }
 
 @router.get("/auth/me", response_model=Dict)
-async def get_current_user_profile(current_user: Dict = Depends(get_current_user)):
+async def get_current_user_profile():
     """
     Get the current authenticated user's profile
     """
-    user_details = user_client.get_user_details(current_user["id"])
+    current_user_payload = await verify_token({"credentials": access_token})
+    current_user = await get_current_user(current_user_payload)
+    
+    user_details = user_client.get_user_details(int(current_user["id"]))
     
     if "error" in user_details:
         status_code = {
@@ -583,7 +592,7 @@ async def get_current_user_profile(current_user: Dict = Depends(get_current_user
     return user_details
 
 @router.get("/auth/users/{user_id}", response_model=Dict)
-async def get_user_details(user_id: int, current_user: Dict = Depends(get_current_user)):
+async def get_user_details(user_id: int):
     """
     Get details of a specific user
     """

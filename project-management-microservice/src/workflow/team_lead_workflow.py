@@ -105,14 +105,12 @@ class TeamLeadWorkflow(BaseWorkflow):
             raise ValueError(f"Subtask with ID {subtask_id} not found")
         
         # Check if user is team lead for this project
-        if not self.role_service.hasTeamLeadAccess(user_id, subtask.project_id):
-            raise PermissionError("Only team leads can assign subtasks")
+        if not self.role_service.hasTeamLeadAccess(user_id, subtask.project_id) and not self.role_service.hasProjectManagerAccess(user_id, subtask.project_id):
+            raise PermissionError("Only team leads and project managers can assign subtasks")
         
         # Update the subtask
-        subtask.assigned = True
-        subtask.assigned_to = assigned_user_id
-        self.subtask_dal.update_subtask(subtask_id, subtask)
-        return True
+        self.subtask_dal.assign_subtask(subtask_id, assigned_user_id)
+        return {"success": True}
     
     def view_team_analytics(self, user_id: str, team_id: str) -> Dict:
         """View analytics for a team (team lead)"""

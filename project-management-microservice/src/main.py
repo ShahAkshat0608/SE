@@ -148,25 +148,6 @@ async def register_user(name: str, email: str, password: str, contact: str = Non
         "user": register_response
     }
 
-@app.get("/api/users/{user_id}", response_model=Dict)
-async def get_user_details(user_id: str):
-    """
-    Get user details from user management service
-    """
-    user_details = user_client.get_user_details(user_id)
-    
-    if "error" in user_details:
-        status_code = 404
-        if user_details["error"] == "Unauthorized":
-            status_code = 401
-        
-        raise HTTPException(
-            status_code=status_code,
-            detail=user_details.get("detail", "Failed to retrieve user details")
-        )
-    
-    return user_details
-
 @app.get("/")
 async def root():
     """

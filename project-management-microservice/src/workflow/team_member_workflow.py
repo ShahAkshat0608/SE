@@ -18,13 +18,14 @@ class TeamMemberWorkflow(BaseWorkflow):
         if not subtask:
             raise ValueError(f"Subtask with ID {subtask_id} not found")
         
-        # Check if user is assigned to this subtask
-        if subtask.assigned_to != user_id:
-            raise PermissionError("You can only update subtasks assigned to you")
+        # Check if user is assigned to this subtask or is a project manager or team lead
+        if not self.role_service.hasProjectManagerAccess(user_id, subtask.project_id) and not self.role_service.hasTeamLeadAccess(user_id, subtask.project_id):
+            # Check if user is assigned to this subtask
+            if subtask.assigned_to != user_id:
+                raise PermissionError("You can only update subtasks assigned to you or if you are a project manager or team lead")
         
-        # Update the subtask
-        subtask.is_completed = is_completed
-        self.subtask_dal.update_subtask(subtask_id, subtask)
+
+        self.subtask_dal.markIsCompleted(subtask_id , is_completed)
         return subtask.to_dict()
     
     def update_subtask_milestone(self, user_id: str, subtask_id: str, milestone_id: str) -> Dict:
@@ -34,18 +35,26 @@ class TeamMemberWorkflow(BaseWorkflow):
         if not subtask:
             raise ValueError(f"Subtask with ID {subtask_id} not found")
         
-        # Check if user is assigned to this subtask
-        if subtask.assigned_to != user_id:
-            raise PermissionError("You can only update subtasks assigned to you")
+        # Check if user is assigned to this subtask or is a project manager or team lead
+        if not self.role_service.hasProjectManagerAccess(user_id, subtask.project_id) and not self.role_service.hasTeamLeadAccess(user_id, subtask.project_id):
+            # Check if user is assigned to this subtask
+            if subtask.assigned_to != user_id:
+                raise PermissionError("You can only update subtasks assigned to you or if you are a project manager or team lead")
+        
         
         # Update the subtask
         subtask.milestone_id = milestone_id
-        self.subtask_dal.update_subtask(subtask_id, subtask)
+        self.subtask_dal.update_milestone(subtask_id, milestone_id)
         return subtask.to_dict()
     
     def view_user_analytics(self, user_id: str) -> Dict:
         """View analytics for the current user"""
         # No permission check needed as users can view their own analytics
         return self.analytics_client.get_user_comprehensive(user_id)
-        pass
+    
+    def get_assigned_subtasks(self, user_id: str) -> Dict:
+        """Get all subtasks assigned to the user"""
+        # Get all subtasks assigned to the user
+        subtasks = self.subtask_dal.get_subtasks_by_user(user_id)
+        return [subtask.to_dict() for subtask in subtasks]
     

@@ -75,8 +75,39 @@ class SubtaskDAL:
         )
         self.conn.commit()
 
+    def markCompleted(self, subtask_id: str , is_completed: bool):
+        """Mark a subtask as completed."""
+        cursor = self.conn.cursor()
+        cursor.execute(
+            "UPDATE subtasks SET is_completed = ? WHERE id = ?", (int(is_completed), subtask_id)
+        )
+        self.conn.commit()
+    
+    def update_milestone(self, subtask_id: str, milestone_id: str):
+        """Update the milestone of a subtask."""
+        cursor = self.conn.cursor()
+        cursor.execute(
+            "UPDATE subtasks SET milestone_id = ? WHERE id = ?", (milestone_id, subtask_id)
+        )
+        self.conn.commit()
+
+    def assign_subtask(self, subtask_id: str, assigned_to: str):
+        """Assign a subtask to a user."""
+        cursor = self.conn.cursor()
+        cursor.execute(
+            "UPDATE subtasks SET assigned_to = ?, assigned = 1 WHERE id = ?", (assigned_to, subtask_id)
+        )
+        self.conn.commit()
+
     def delete_subtask(self, subtask_id: str):
         """Delete a subtask by ID."""
         cursor = self.conn.cursor()
         cursor.execute("DELETE FROM subtasks WHERE id = ?", (subtask_id,))
         self.conn.commit()
+    
+    def get_subtasks_by_user(self, user_id: str) -> List[Subtask]:
+        """Fetch all subtasks assigned to a user."""
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT * FROM subtasks WHERE assigned_to = ?", (user_id,))
+        rows = cursor.fetchall()
+        return [Subtask.from_dict(dict(row)) for row in rows]
