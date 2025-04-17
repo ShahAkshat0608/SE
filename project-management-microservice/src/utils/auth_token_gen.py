@@ -24,7 +24,7 @@ def create_access_token(data: Dict) -> str:
     
     # Create token
     encoded_jwt = jwt.encode(to_encode, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
-    print(f"Encoded JWT: {" generated encoded_jwt"}")  # Debugging line to print the encoded JWT
+    print(f"Encoded JWT: generated {encoded_jwt}")  # Debugging line to print the encoded JWT
     return encoded_jwt
 
 
