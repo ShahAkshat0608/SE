@@ -26,6 +26,7 @@ class TeamLeadWorkflow(BaseWorkflow):
         if not task:
             raise ValueError(f"Task with ID {task_id} not found")
         
+        print(f"Task details: {task.to_dict()}")
         # Check user has TEAM_LEAD role in this project
         if not self.role_service.hasTeamLeadAccess(user_id, task.project_id) and not self.role_service.hasProjectManagerAccess(user_id, task.project_id):
             raise PermissionError("Only team leads or Project Managers can create subtasks")
@@ -188,9 +189,46 @@ class TeamLeadWorkflow(BaseWorkflow):
         self.task_manager_service.removeSubtask(subtask_id)
         return {"success": True}
     
-    def add_dependency(self, subtask_id: str, depends_on_id: str) -> bool:
-        pass
+    def add_dependency(self, user_id: str , task_id:str , subtask_id: str, parent_subtask_id: str) -> bool:
+        """Add a dependency to a subtask (team lead or project manager)"""
+        # Get task details
+        task = self.task_service.getTask(task_id)
+        if not task:
+            raise ValueError(f"Task with ID {task_id} not found")
+        # Check if user is team lead for this project
+        if not self.role_service.hasTeamLeadAccess(user_id, task.project_id) and not self.role_service.hasProjectManagerAccess(user_id, task.project_id):
+            raise PermissionError("Only team leads or project managers can add dependencies")
+        
+        # add dependency to the subtask 
+        self.task_manager_service.defineDependency(task_id , subtask_id, parent_subtask_id)
+        
+        return {"success": True}
 
+    def remove_dependency(self, user_id: str , task_id:str , subtask_id: str, parent_subtask_id: str) -> bool:
+        """Remove a dependency from a subtask (team lead or project manager)"""
+        # Get task details
+        task = self.task_service.getTask(task_id)
+        if not task:
+            raise ValueError(f"Task with ID {task_id} not found")
+        
+        # Check if user is team lead for this project
+        if not self.role_service.hasTeamLeadAccess(user_id, task.project_id) and not self.role_service.hasProjectManagerAccess(user_id, task.project_id):
+            raise PermissionError("Only team leads or project managers can remove dependencies")
+        
+        # remove dependency from the subtask 
+        self.task_manager_service.removeDependency(task_id , subtask_id, parent_subtask_id)
+        
+        return {"success": True}
+    
+    def get_dependency_tree(self, task_id: str) -> Dict:
+        """Get the dependency tree for a task (team lead or project manager)"""
+        # Get task details
+        task = self.task_service.getTask(task_id)
+        if not task:
+            raise ValueError(f"Task with ID {task_id} not found")
+        
+        # Get the dependency tree
+        return self.task_manager_service.getDependencyTree(task_id)
     def modify_dependency(self, subtask_id: str, depends_on_id: str) -> bool:
         pass
 

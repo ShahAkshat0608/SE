@@ -379,6 +379,54 @@ async def assign_subtask(
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
+@router.post("/subtasks/{subtask_id}/dependencies", response_model=Dict)
+async def define_dependency(task_id : str , subtask_id: str, parent_subtask_id: str):
+    """Define a dependency between two subtasks."""
+    current_user_payload = await verify_token({"credentials": access_token})
+    current_user = await get_current_user(current_user_payload)
+    workflow = TeamLeadWorkflow()
+    try:
+        return workflow.add_dependency(current_user["id"], task_id, subtask_id, parent_subtask_id)
+    except PermissionError as e:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+@router.get("/tasks/{task_id}/dependency-tree", response_model=Dict)
+async def get_dependency_tree(task_id: str):
+    """Get the dependency tree for a task"""
+    current_user_payload = await verify_token({"credentials": access_token})
+    current_user = await get_current_user(current_user_payload)
+    workflow = TeamLeadWorkflow()
+    try:
+        return workflow.get_dependency_tree(task_id)
+    except PermissionError as e:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+# ROUTE for removing any dependency
+@router.delete("/subtasks/{subtask_id}/{parent_subtask_id}/dependencies", response_model=Dict)
+async def remove_dependency(
+    task_id: str,
+    subtask_id: str,
+    parent_subtask_id: str,
+):
+    """Remove a dependency between two subtasks."""
+    print(f"Removing dependency: {parent_subtask_id} -> {subtask_id}")
+    current_user_payload = await verify_token({"credentials": access_token})
+    current_user = await get_current_user(current_user_payload)
+    workflow = TeamLeadWorkflow()
+    try:
+        return workflow.remove_dependency(current_user["id"], task_id, subtask_id, parent_subtask_id)
+    except PermissionError as e:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+    
+
+
 @router.get("/teams/{team_id}/analytics", response_model=Dict)
 async def view_team_analytics(team_id: str):
     """View analytics for a team (Team Lead)"""

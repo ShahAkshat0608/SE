@@ -242,19 +242,38 @@ def insert_sample_data():
 # """)
 
 # print all the entries in the teams table
-cursor.execute("SELECT * FROM team_members;")
+# cursor.execute("SELECT * FROM team_members;")
+# rows = cursor.fetchall()
+# print("Entries in the teams members table:")
+# for row in rows:
+#     print(row)
+
+# # same with roles table
+# cursor.execute("SELECT * FROM roles;")
+# rows = cursor.fetchall()
+# print("Entries in the roles table:")
+# for row in rows:
+#     print(row)
+
+# check entries of dependency_tree table
+cursor.execute("SELECT * FROM dependency_tree;")
 rows = cursor.fetchall()
-print("Entries in the teams members table:")
+print("Entries in the dependency_tree table:")
 for row in rows:
     print(row)
 
-# same with roles table
-cursor.execute("SELECT * FROM roles;")
-rows = cursor.fetchall()
-print("Entries in the roles table:")
-for row in rows:
-    print(row)
-
+# Empty the dependency_tree table , alter to add a column for id
+# cursor.execute("DROP TABLE IF EXISTS dependency_tree;")
+# cursor.execute("""
+# CREATE TABLE IF NOT EXISTS dependency_tree (
+#     id TEXT PRIMARY KEY,
+#     task_id TEXT NOT NULL,
+#     root_subtask_id TEXT,
+#     dependencies TEXT, -- JSON object to store dependencies
+#     FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE,
+#     FOREIGN KEY (root_subtask_id) REFERENCES subtasks(id) ON DELETE SET NULL
+# );
+# """)
 
 # Commit changes and close the connection
 conn.commit()

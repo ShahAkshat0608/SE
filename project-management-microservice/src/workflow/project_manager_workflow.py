@@ -10,6 +10,7 @@ from ..services.team_service import TeamService
 from ..services.milestone_service import MilestoneService
 from ..services.task_service import TaskService
 from ..services.project_service import ProjectService
+from ..services.task_manager_service import TaskManagerService
 from ..services.clients.analytics_client import AnalyticsServiceClient
 from ..models.enums import RoleType
 
@@ -21,6 +22,7 @@ class ProjectManagerWorkflow(BaseWorkflow):
         self.task_service = TaskService()
         self.analytics_client = AnalyticsServiceClient()
         self.project_service =  ProjectService() # Assuming this is set in the base class
+        self.task_manager_service = TaskManagerService() # Assuming this is set in the base class
     
     def get_project_details_by_name(self, project_name: str) -> Dict:
         """Get just the project details by name using the project service"""
@@ -115,6 +117,7 @@ class ProjectManagerWorkflow(BaseWorkflow):
         )
         
         created_task = self.task_service.createTask(task)
+        self.task_manager_service.initialiseTaskManager(created_task.id)
         return created_task.to_dict()
     
     def get_tasks(self, project_id: str) -> List[Dict]:
