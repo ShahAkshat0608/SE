@@ -17,7 +17,7 @@ from ..utils.auth_utils import verify_token
 
 router = APIRouter()
 user_client = APIClient()
-access_token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIyIiwiZW1haWwiOiJhYmNAZ21haWwuY29tIiwiZXhwIjoxNzQ0OTYzNzQwLjc4NjM5NH0.bILP83gyTl1BVC-AnNj6nRlWeJtKKej0VKDr1jJXZbk"
+global access_token
 # access_token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI1IiwiZW1haWwiOiJqa2xAZ21haWwuY29tIiwiZXhwIjoxNzQ0OTgwNDgwLjQzMzI5fQ.Qw7tGmHqR7Dgj_g_-HxhwuzTpNFMqe9WM5j9Pa0LIiE"
 
 # --- User Workflow Endpoints ---
@@ -40,6 +40,7 @@ async def create_project(project_data: Dict):
 
 @router.get("/projects/{project_id}/role", response_model=Dict)
 async def get_user_role_in_project(project_id: str):
+    print(f"Access Token: {access_token}")
     """Get current user's role in a specific project"""
     current_user_payload = await verify_token({"credentials": access_token})
     current_user = await get_current_user(current_user_payload)
@@ -53,6 +54,7 @@ async def get_user_role_in_project(project_id: str):
 
 @router.get("/projects/{project_name}")
 async def get_project_details(project_name: str):
+    print(f"Access Token: {access_token}")
     """Get project details"""
     workflow = ProjectManagerWorkflow()
     current_user_payload = await verify_token({"credentials": access_token})
@@ -527,6 +529,8 @@ async def login_user(email : str, password: str):
     """
     Login a user and return access token
     """
+    global access_token
+
     # Basic input validation
     if not all([email.strip(), password.strip()]):
         raise HTTPException(
@@ -545,11 +549,12 @@ async def login_user(email : str, password: str):
     
     user = auth_response  # Response is user data directly
     access_token_expires = timedelta(days=30)
-    access_token = create_access_token(
+    access_token_local = create_access_token(
         data={"sub": str(user.get("id")), "email": user.get("email")},
         # expires_delta=access_token_expires
     )
     
+    access_token = access_token_local
     return {
         "access_token": access_token,
         "token_type": "bearer",
@@ -562,7 +567,7 @@ async def login_user(email : str, password: str):
     }
 
 @router.post("/auth/logout", response_model=Dict)
-async def logout_user(current_user: Dict = Depends(get_current_user)):
+async def logout_user():
     """
     Log out current user 
     
@@ -570,6 +575,8 @@ async def logout_user(current_user: Dict = Depends(get_current_user)):
     but this endpoint can be used for tracking logout events or invalidating tokens 
     on the server if a token blacklist is implemented
     """
+    global access_token
+    access_token = None  # Invalidate the token
     return {
         "success": True,
         "message": "User logged out successfully"

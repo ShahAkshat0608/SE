@@ -2,19 +2,18 @@ from typing import Dict
 from .base_workflow import BaseWorkflow
 from ..models.enums import RoleType
 from ..services.clients.analytics_client import AnalyticsServiceClient
+from ..services.task_manager_service import TaskManagerService
 
 class TeamMemberWorkflow(BaseWorkflow):
     def __init__(self):
         super().__init__()
         self.analytics_client = AnalyticsServiceClient()
-        # We'll need a SubtaskService
-        from ..database.subtask_dal import SubtaskDAL
-        self.subtask_dal = SubtaskDAL()
+        self.task_manager_service = TaskManagerService()
     
     def update_subtask_completion(self, user_id: str, subtask_id: str, is_completed: bool) -> Dict:
         """Update subtask completion status"""
         # Get subtask details
-        subtask = self.subtask_dal.get_subtask(subtask_id)
+        subtask = self.task_manager_service.getSubtaskbyId(subtask_id)
         if not subtask:
             raise ValueError(f"Subtask with ID {subtask_id} not found")
         
@@ -25,13 +24,13 @@ class TeamMemberWorkflow(BaseWorkflow):
                 raise PermissionError("You can only update subtasks assigned to you or if you are a project manager or team lead")
         
 
-        self.subtask_dal.markIsCompleted(subtask_id , is_completed)
+        self.task_manager_service.update_subtask_completion(subtask_id, is_completed)
         return subtask.to_dict()
     
     def update_subtask_milestone(self, user_id: str, subtask_id: str, milestone_id: str) -> Dict:
         """Update subtask milestone"""
         # Get subtask details
-        subtask = self.subtask_dal.get_subtask(subtask_id)
+        subtask = self.task_manager_service.getSubtaskbyId(subtask_id)
         if not subtask:
             raise ValueError(f"Subtask with ID {subtask_id} not found")
         
@@ -41,10 +40,7 @@ class TeamMemberWorkflow(BaseWorkflow):
             if subtask.assigned_to != user_id:
                 raise PermissionError("You can only update subtasks assigned to you or if you are a project manager or team lead")
         
-        
-        # Update the subtask
-        subtask.milestone_id = milestone_id
-        self.subtask_dal.update_milestone(subtask_id, milestone_id)
+        self.task_manager_service.updateSubtaskMilestone(subtask_id, milestone_id)
         return subtask.to_dict()
     
     def view_user_analytics(self, user_id: str) -> Dict:
@@ -54,7 +50,5 @@ class TeamMemberWorkflow(BaseWorkflow):
     
     def get_assigned_subtasks(self, user_id: str) -> Dict:
         """Get all subtasks assigned to the user"""
-        # Get all subtasks assigned to the user
-        subtasks = self.subtask_dal.get_subtasks_by_user(user_id)
-        return [subtask.to_dict() for subtask in subtasks]
+        return self.task_manager_service.get_assigned_subtasks(user_id)
     

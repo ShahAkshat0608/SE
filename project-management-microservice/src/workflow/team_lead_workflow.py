@@ -17,9 +17,6 @@ class TeamLeadWorkflow(BaseWorkflow):
         self.team_service = TeamService()
         self.task_service = TaskService()
         self.analytics_client = AnalyticsServiceClient()
-        # We'll need a SubtaskService that isn't fully implemented in the provided code
-        from ..database.subtask_dal import SubtaskDAL
-        self.subtask_dal = SubtaskDAL()
         self.task_manager_service = TaskManagerService()
     
     def create_subtask(self, user_id: str, task_id: str, subtask_data: Dict) -> Dict:
@@ -47,7 +44,7 @@ class TeamLeadWorkflow(BaseWorkflow):
         )
         
         # Add subtask
-        self.subtask_dal.add_subtask(subtask)
+        self.task_manager_service.addSubtask(subtask)
         return subtask.to_dict()
     
     def add_team_member(self, user_id: str, team_id: str, member_user_id: str) -> bool:
@@ -103,7 +100,7 @@ class TeamLeadWorkflow(BaseWorkflow):
     def assign_subtask(self, user_id: str, subtask_id: str, assigned_user_id: str) -> bool:
         """Assign a subtask to a user (team lead only)"""
         # Get subtask details
-        subtask = self.subtask_dal.get_subtask(subtask_id)
+        subtask = self.task_manager_service.getSubtaskbyId(subtask_id)
         if not subtask:
             raise ValueError(f"Subtask with ID {subtask_id} not found")
         
@@ -112,7 +109,7 @@ class TeamLeadWorkflow(BaseWorkflow):
             raise PermissionError("Only team leads and project managers can assign subtasks")
         
         # Update the subtask
-        self.subtask_dal.assign_subtask(subtask_id, assigned_user_id)
+        self.task_manager_service.assignSubtaskToUser(subtask_id, assigned_user_id)
         return {"success": True}
     
     def view_team_analytics(self, user_id: str, team_id: str) -> Dict:
@@ -146,13 +143,12 @@ class TeamLeadWorkflow(BaseWorkflow):
             raise ValueError(f"Task with ID {task_id} not found")
         
         # Get all subtasks for the task
-        subtasks = self.subtask_dal.get_subtasks_by_task(task_id)
-        return [subtask.to_dict() for subtask in subtasks]
+        return self.task_manager_service.getSubtasksByTask(task_id)
     
     def update_subtask(self, user_id : str , subtask_id: str, update_data: Dict[str, Any]) -> Optional[Subtask]:
         """Update a subtask (team lead or project manager)"""
         # Get subtask details
-        subtask = self.subtask_dal.get_subtask(subtask_id)
+        subtask = self.task_manager_service.getSubtaskbyId(subtask_id)
         if not subtask:
             raise ValueError(f"Subtask with ID {subtask_id} not found")
         # Check if user is team lead for this project
@@ -174,13 +170,13 @@ class TeamLeadWorkflow(BaseWorkflow):
             subtask.is_completed = update_data['is_completed']
         
         # Update the subtask in the database
-        self.subtask_dal.update_subtask(subtask_id, subtask)
+        self.task_manager_service.updateSubtask(subtask_id , subtask)
         return subtask.to_dict()
         
     def delete_subtask(self, user_id , subtask_id: str) -> bool:
         """Delete a subtask (team lead or project manager)"""
         # Get subtask details
-        subtask = self.subtask_dal.get_subtask(subtask_id)
+        subtask = self.task_manager_service.getSubtaskbyId(subtask_id)
         if not subtask:
             raise ValueError(f"Subtask with ID {subtask_id} not found")
         
@@ -189,7 +185,7 @@ class TeamLeadWorkflow(BaseWorkflow):
             raise PermissionError("Only team leads or project managers can delete subtasks")
         
         # Delete the subtask
-        self.subtask_dal.delete_subtask(subtask_id)
+        self.task_manager_service.removeSubtask(subtask_id)
         return {"success": True}
     
     def add_dependency(self, subtask_id: str, depends_on_id: str) -> bool:

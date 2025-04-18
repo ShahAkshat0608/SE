@@ -3,7 +3,6 @@ from datetime import datetime
 from typing import List, Optional
 from uuid import uuid4
 from .enums import TaskStatus, TaskPriority
-from ..services.task_manager_service import TaskManager  # Import TaskManager
 
 @dataclass
 class Task:
