@@ -195,12 +195,26 @@ class TeamLeadWorkflow(BaseWorkflow):
         task = self.task_service.getTask(task_id)
         if not task:
             raise ValueError(f"Task with ID {task_id} not found")
+        
+        # get parent subtask details
+        parent_subtask = self.task_manager_service.getSubtaskbyId(parent_subtask_id) # 
+        if not parent_subtask:
+            raise ValueError(f"Parent subtask with ID {parent_subtask_id} not found")
+        # get subtask details
+        subtask = self.task_manager_service.getSubtaskbyId(subtask_id)
+        if not subtask:
+            raise ValueError(f"Subtask with ID {subtask_id} not found")
+        
         # Check if user is team lead for this project
         if not self.role_service.hasTeamLeadAccess(user_id, task.project_id) and not self.role_service.hasProjectManagerAccess(user_id, task.project_id):
             raise PermissionError("Only team leads or project managers can add dependencies")
         
         # add dependency to the subtask 
         self.task_manager_service.defineDependency(task_id , subtask_id, parent_subtask_id)
+
+        if parent_subtask.assigned_to is not None and subtask.assigned_to is None:
+            self.task_manager_service.assignSubtaskToUser(subtask_id, parent_subtask.assigned_to)
+
         
         return {"success": True}
 
@@ -229,6 +243,45 @@ class TeamLeadWorkflow(BaseWorkflow):
         
         # Get the dependency tree
         return self.task_manager_service.getDependencyTree(task_id)
+    
+    def fix_assignments(self, user_id: str, task_id: str) -> None:
+        """Fix assignments for all subtasks in a team (team lead only)"""
+        # Get task details
+        task = self.task_service.getTask(task_id)
+        if not task:
+            raise ValueError(f"Task with ID {task_id} not found")
+        
+        # Check if user is team lead for this project
+        if not self.role_service.hasTeamLeadAccess(user_id, task.project_id) and not self.role_service.hasProjectManagerAccess(user_id, task.project_id):
+            raise PermissionError("Only team leads or project managers can fix assignments")
+        
+        # Get the dependency tree
+        dependency_tree = self.task_manager_service.getDependencyTree(task_id)
+        if not dependency_tree:
+            raise ValueError(f"Dependency tree for task {task_id} not found")
+        
+        dependencies = dependency_tree.dependencies # dictionary of type Dict[str, List[str]]
+        for subtask_id, dependent_subtasks in dependencies.items():
+            # Get the subtask details
+            subtask = self.task_manager_service.getSubtaskbyId(subtask_id)
+            if not subtask:
+                raise ValueError(f"Subtask with ID {subtask_id} not found")
+            
+            # Check if the subtask is assigned to a user
+            if subtask.assigned_to is not None:
+                # if any of the child subtasks are not assigned to a user, assign the subtask to the user
+                for dependent_subtask_id in dependent_subtasks:
+                    dependent_subtask = self.task_manager_service.getSubtaskbyId(dependent_subtask_id)
+                    if not dependent_subtask:
+                        raise ValueError(f"Dependent subtask with ID {dependent_subtask_id} not found")
+                    
+                    # Check if the dependent subtask is assigned to a user
+                    if dependent_subtask.assigned_to is None:
+                        # Assign the dependent subtask to the user
+                        self.task_manager_service.assignSubtaskToUser(dependent_subtask_id, subtask.assigned_to)
+        
+        return {"success": True}
+        
     def modify_dependency(self, subtask_id: str, depends_on_id: str) -> bool:
         pass
 
