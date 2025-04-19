@@ -10,10 +10,12 @@ class ProgressAnalyticsStrategy(ProjectAnalyticsStrategy[ProjectProgressResponse
     async def generate_report(self, project_id: str) -> ProjectProgressResponse:
         """Generate a progress report for a project"""
         # Try to get from cache
+        
         cache_key = f"project_progress:{project_id}"
         cached_report = await self.get_cached_report(cache_key)
         if cached_report:
             return ProjectProgressResponse(**cached_report)
+        
         
         # Get project data
         project = await self.data_access.get_project_by_id(project_id)

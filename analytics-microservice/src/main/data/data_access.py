@@ -11,14 +11,15 @@ class DataAccess:
     Provides a unified interface for analytics data needs.
     """
     def __init__(self):
-        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+        base_dir = "/Users/sarthak/Desktop/IIIT Course Work/Sem8/SE/project-3/SE"
         
         # Path to the user management database
         self.user_db_path = os.path.join(base_dir, "user-management", "src", "main", "data", "users.db")
-        
+        print("User db manger path: ", self.user_db_path)
         # Path to the project management database
         pm_dir = os.path.join(base_dir, "project-management-microservice", "src", "database")
         self.project_db_path = os.path.join(pm_dir, "project_management.db")
+        print("Project db manager path: ", self.project_db_path)
         
         # Ensure the database files exist
         if not os.path.exists(self.user_db_path):

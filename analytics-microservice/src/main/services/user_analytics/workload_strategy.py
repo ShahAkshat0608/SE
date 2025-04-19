@@ -64,7 +64,7 @@ class WorkloadAnalyticsStrategy(UserAnalyticsStrategy[UserWorkloadResponse]):
                     due_date=due_date,
                     completed=False,
                     estimated_hours=subtask.get("estimated_hours", 0),
-                    tags=subtask.get("tags", [])
+                    tags=[]
                 )
             )
         

@@ -55,11 +55,11 @@ class AnalyticsFacade:
         
         # Generate the report
         report = await self.project_context.generate_report(project_id)
-        
+       
         # Add visualizations if requested
         if visualize and hasattr(report, "dict"):
             report.visualizations = generate_visualization_data(report_type, report.dict())
-        
+
         return report
     
     async def generate_team_analytics(

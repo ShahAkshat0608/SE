@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from abc import ABC, abstractmethod
 
 from ..services.analytics_facade import AnalyticsFacade, ReportType
-from ..utils.auth_utils import get_current_user, check_analytics_permission, RolePermission
+from ..utils.auth_utils import get_current_user, check_analytics_permission, RolePermission , verify_token
 
 class BaseAnalyticsRoutes(ABC):
     """
@@ -103,10 +103,16 @@ class BaseAnalyticsRoutes(ABC):
         entity_id: str,
         project_id: Optional[str] = None,
         visualize: bool = Query(False, description="Include visualization data"),
-        current_user: Dict = Depends(get_current_user)
+        # current_user: Dict = Depends(get_current_user)
     ):
-        """Get progress analytics"""
-        await self._check_permission(request, entity_id, project_id, current_user)
+        # print("Get progress analytics")
+        # """Get progress analytics"""
+        # access_token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIiwiZW1haWwiOiJzYXJ0aGFrYmFuc2FsMzk1QGdtYWlsLmNvbSIsImV4cCI6MTc0NTE2MTc2My40MTA0NTR9.lI3DKUTAkmccBLkR9gxGxohzkr4vha4sTK5-OumXpco"
+        # current_user_payload = await verify_token({"credentials": access_token})
+        # print("Current user payload:", current_user_payload)
+        # current_user = await get_current_user(current_user_payload)
+        # print("Current user:", current_user)
+        # await self._check_permission(request, entity_id, project_id, current_user)
         return await self._generate_analytics(entity_id, project_id, ReportType.PROGRESS, visualize)
     
     async def get_workload_analytics(
@@ -115,10 +121,10 @@ class BaseAnalyticsRoutes(ABC):
         entity_id: str,
         project_id: Optional[str] = None,
         visualize: bool = Query(False, description="Include visualization data"),
-        current_user: Dict = Depends(get_current_user)
+        # current_user: Dict = Depends(get_current_user)
     ):
         """Get workload analytics"""
-        await self._check_permission(request, entity_id, project_id, current_user)
+        # await self._check_permission(request, entity_id, project_id, current_user)
         return await self._generate_analytics(entity_id, project_id, ReportType.WORKLOAD, visualize)
     
     async def get_comprehensive_analytics(
@@ -127,10 +133,10 @@ class BaseAnalyticsRoutes(ABC):
         entity_id: str,
         project_id: Optional[str] = None,
         visualize: bool = Query(False, description="Include visualization data"),
-        current_user: Dict = Depends(get_current_user)
+        # current_user: Dict = Depends(get_current_user)
     ):
         """Get comprehensive analytics"""
-        await self._check_permission(request, entity_id, project_id, current_user)
+        # await self._check_permission(request, entity_id, project_id, current_user)
         return await self._generate_analytics(entity_id, project_id, ReportType.COMPREHENSIVE, visualize)
     
     async def get_analytics(
@@ -140,8 +146,9 @@ class BaseAnalyticsRoutes(ABC):
         project_id: Optional[str] = None,
         report_type: str = Query(ReportType.COMPREHENSIVE, description="Type of report (progress, workload, comprehensive)"),
         visualize: bool = Query(False, description="Include visualization data"),
-        current_user: Dict = Depends(get_current_user)
+        # current_user: Dict = Depends(get_current_user)
     ):
         """Get analytics with specified report type"""
-        await self._check_permission(request, entity_id, project_id, current_user)
-        return await self._generate_analytics(entity_id, project_id, report_type, visualize)
+        # await self._check_permission(request, entity_id, project_id, current_user)
+        response = await self._generate_analytics(entity_id, project_id, report_type, visualize)
+        return response

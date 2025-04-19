@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Dict, Any, TypeVar, Generic
 from ...data.data_access_test import TestDataAccess
+from ...data.data_access import DataAccess
 from ...data.cache import SimpleMemoryCache
 
 ResponseType = TypeVar('ResponseType')
@@ -9,7 +10,7 @@ class ProjectAnalyticsStrategy(ABC, Generic[ResponseType]):
     """Abstract base class for all project analytics strategies"""
     
     def __init__(self):
-        self.data_access = TestDataAccess()
+        self.data_access = DataAccess()
         self.cache = SimpleMemoryCache()
     
     @abstractmethod

@@ -63,7 +63,7 @@ class ProgressAnalyticsStrategy(UserAnalyticsStrategy[UserProgressResponse]):
                     due_date=due_date,
                     completed=subtask.get("completed", False),
                     estimated_hours=subtask.get("estimated_hours", 0),
-                    tags=subtask.get("tags", [])
+                    tags=[]
                 )
             )
         

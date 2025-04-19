@@ -103,8 +103,8 @@ class ComprehensiveAnalyticsStrategy(ProjectAnalyticsStrategy[ProjectComprehensi
             project_name=project.get("name"),
             project_manager=project_manager_name,
             status=project.get("status"),
-            start_date=start_date,
-            target_end_date=target_end_date,
+            start_date=datetime.now() if start_date is None else start_date,
+            target_end_date=datetime.now() if target_end_date is None else target_end_date,
             progress_stats={
                 "completion_rate": progress_report.completion_rate,
                 "completed_subtasks": progress_report.completed_subtasks,

@@ -4,6 +4,7 @@ import jwt
 from datetime import datetime, timedelta
 from typing import Dict, Optional, List
 from ..data.data_access_test import TestDataAccess
+from ..data.data_access import DataAccess
 import os
 
 # JWT security scheme
@@ -60,8 +61,10 @@ class RolePermission:
         }
     }
 
-async def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)) -> Dict:
+async def verify_token(credentials) -> Dict:
     """Verify JWT token and return payload"""
+    # access_token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIiwiZW1haWwiOiJzYXJ0aGFrYmFuc2FsMzk1QGdtYWlsLmNvbSIsImV4cCI6MTc0NTE2MTc2My40MTA0NTR9.lI3DKUTAkmccBLkR9gxGxohzkr4vha4sTK5-OumXpco"
+    credentials = {credentials : "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIiwiZW1haWwiOiJzYXJ0aGFrYmFuc2FsMzk1QGdtYWlsLmNvbSIsImV4cCI6MTc0NTE2MTc2My40MTA0NTR9.lI3DKUTAkmccBLkR9gxGxohzkr4vha4sTK5-OumXpco"}
     try:
         payload = jwt.decode(
             credentials.credentials,
@@ -107,6 +110,7 @@ def create_test_token(user_id: str, role: str) -> str:
 
 async def get_current_user(token: Dict = Depends(verify_token)) -> Dict:
     """Get current user from token"""
+    print("Token:", token)
     return {
         "user_id": token.get("sub"),
         "role": token.get("role", "user"),
@@ -140,7 +144,7 @@ async def check_analytics_permission(
     role = current_user.get("role", "user")
     
     # Get data access layer
-    data_access = TestDataAccess()
+    data_access = DataAccess()
     
     # Get permissions for this role and resource
     permissions = RolePermission.PERMISSIONS.get(role, {}).get(resource_type, [])

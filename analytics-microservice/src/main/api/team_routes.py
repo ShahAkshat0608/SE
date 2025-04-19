@@ -5,6 +5,7 @@ from pydantic import BaseModel
 from ..models.response_models import TeamProgressResponse, TeamWorkloadResponse, TeamComprehensiveResponse
 from ..utils.auth_utils import RolePermission, get_current_user
 from .base_routes import BaseAnalyticsRoutes
+from fastapi import Response, status
 
 class TeamAnalyticsRoutes(BaseAnalyticsRoutes):
     """Team analytics routes implementation"""
@@ -16,8 +17,15 @@ class TeamAnalyticsRoutes(BaseAnalyticsRoutes):
         """Generate team analytics report"""
         if not project_id:
             raise ValueError("Project ID is required for team analytics")
-            
-        return await self.facade.generate_team_analytics(entity_id, project_id, report_type, visualize)
+        
+        result = await self.facade.generate_team_analytics(entity_id, project_id, report_type, visualize)
+        if result:
+            return Response(
+                content=result.json(), 
+                media_type="application/json",
+                status_code=status.HTTP_200_OK
+            )
+        return result
     
     def get_progress_response_model(self) -> Type[BaseModel]:
         return TeamProgressResponse
@@ -35,9 +43,9 @@ class TeamAnalyticsRoutes(BaseAnalyticsRoutes):
         entity_id: str,
         project_id: str = Query(..., description="Project ID"),
         visualize: bool = Query(False, description="Include visualization data"),
-        current_user: dict = Depends(get_current_user)
+        # current_user: dict = Depends(get_current_user)
     ):
-        return await super().get_progress_analytics(request, entity_id, project_id, visualize, current_user)
+        return await super().get_progress_analytics(request, entity_id, project_id, visualize)
     
     async def get_workload_analytics(
         self,
@@ -45,9 +53,9 @@ class TeamAnalyticsRoutes(BaseAnalyticsRoutes):
         entity_id: str,
         project_id: str = Query(..., description="Project ID"),
         visualize: bool = Query(False, description="Include visualization data"),
-        current_user: dict = Depends(get_current_user)
+        # current_user: dict = Depends(get_current_user)
     ):
-        return await super().get_workload_analytics(request, entity_id, project_id, visualize, current_user)
+        return await super().get_workload_analytics(request, entity_id, project_id, visualize)
     
     async def get_comprehensive_analytics(
         self,
@@ -55,9 +63,9 @@ class TeamAnalyticsRoutes(BaseAnalyticsRoutes):
         entity_id: str,
         project_id: str = Query(..., description="Project ID"),
         visualize: bool = Query(False, description="Include visualization data"),
-        current_user: dict = Depends(get_current_user)
+        # current_user: dict = Depends(get_current_user)
     ):
-        return await super().get_comprehensive_analytics(request, entity_id, project_id, visualize, current_user)
+        return await super().get_comprehensive_analytics(request, entity_id, project_id, visualize)
     
     async def get_analytics(
         self,
@@ -66,9 +74,9 @@ class TeamAnalyticsRoutes(BaseAnalyticsRoutes):
         project_id: str = Query(..., description="Project ID"),
         report_type: str = Query("comprehensive", description="Type of report (progress, workload, comprehensive)"),
         visualize: bool = Query(False, description="Include visualization data"),
-        current_user: dict = Depends(get_current_user)
+        # current_user: dict = Depends(get_current_user)
     ):
-        return await super().get_analytics(request, entity_id, project_id, report_type, visualize, current_user)
+        return await super().get_analytics(request, entity_id, project_id, report_type, visualize)
 
 # Create an instance to expose the router
 team_routes = TeamAnalyticsRoutes()

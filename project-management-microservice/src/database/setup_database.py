@@ -58,6 +58,8 @@ def create_tables():
             project_id TEXT NOT NULL,
             team_lead_id TEXT NOT NULL,
             type TEXT, -- Enum: RESEARCH, ANALYSIS, etc.
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
             FOREIGN KEY (team_lead_id) REFERENCES users(id) ON DELETE CASCADE
         );
@@ -138,8 +140,9 @@ def create_tables():
 
     if not table_exists("dependency_tree"):
         cursor.execute("""
-        CREATE TABLE IF NOT EXISTS dependency_tree (
-            task_id TEXT PRIMARY KEY,
+                CREATE TABLE dependency_tree (
+            id TEXT PRIMARY KEY,
+            task_id TEXT NOT NULL,
             root_subtask_id TEXT,
             dependencies TEXT, -- JSON object to store dependencies
             FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE,
@@ -233,31 +236,26 @@ def insert_sample_data():
     ])         
 
 # Run the setup
-create_tables()
+# create_tables()
 
-# Only insert sample data if the tables are empty
-cursor.execute("SELECT COUNT(*) FROM projects")
-project_count = cursor.fetchone()[0]
+# Alter table team to add new columns created_at and updated_at
+# cursor.execute("""
+# ALTER TABLE teams ADD COLUMN created_at TEXT DEFAULT CURRENT_TIMESTAMP;
+# """)
 
-if project_count == 0:
-    print("Tables are empty, inserting sample data...")
-    insert_sample_data()
-else:
-    print(f"Tables already contain data (found {project_count} projects), skipping sample data insertion.")
+# cursor.execute("""
+# ALTER TABLE teams ADD COLUMN updated_at TEXT DEFAULT CURRENT_TIMESTAMP;
+# """)
 
-# command to get the current table names
-cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
-tables = cursor.fetchall()
-print("Tables in the database:")
-for table in tables:
-    print(table[0])
-
-# get the entries table projects
-cursor.execute("SELECT * FROM projects;")
-rows = cursor.fetchall()    
-print("Entries in the projects table:")
+# get content of table roles
+cursor.execute("""
+SELECT * FROM subtasks;
+""")
+rows = cursor.fetchall()
+# Print the content of the table
 for row in rows:
     print(row)
+    
 
 # Commit the changes and close the connection
 conn.commit()
