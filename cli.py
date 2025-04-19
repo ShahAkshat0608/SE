@@ -1200,7 +1200,14 @@ def auto_generate_subtasks(task_id, description, priority, due, milestone_id, ta
         response = requests.post(url, params=payload, headers={"Authorization": f"Bearer {token}"}, timeout=30)
         
         if response.status_code == 200:
-            results = response.json()
+            response_data = response.json()
+            
+            # Check if the response has the expected structure
+            if not response_data or "subtasks" not in response_data:
+                click.echo("No subtasks were generated or unexpected response format.")
+                return
+                
+            results = response_data["subtasks"]
             if not results:
                 click.echo("No subtasks were generated.")
                 return
@@ -1208,8 +1215,17 @@ def auto_generate_subtasks(task_id, description, priority, due, milestone_id, ta
             click.echo("\nAI-generated subtasks:")
             click.echo("=" * 50)
             for i, subtask in enumerate(results, 1):
-                click.echo(f"{i}. {subtask.get('name')}: {subtask.get('description')}")
-                click.echo(f"   Priority: {subtask.get('priority')}, ID: {subtask.get('id')}")
+                # Check if the subtask is a dictionary before using .get()
+                if isinstance(subtask, dict):
+                    name = subtask.get('name', 'No name')
+                    description = subtask.get('description', 'No description')
+                    priority = subtask.get('priority', 'No priority')
+                    subtask_id = subtask.get('id', 'No ID')
+                    click.echo(f"{i}. {name}: {description}")
+                    click.echo(f"   Priority: {priority}, ID: {subtask_id}")
+                else:
+                    # Handle the case where subtask might be a string
+                    click.echo(f"{i}. {subtask}")
             click.echo("=" * 50)
             click.echo(f"Successfully generated {len(results)} subtasks!")
         else:

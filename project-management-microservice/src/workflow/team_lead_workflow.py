@@ -10,6 +10,10 @@ from ..services.clients.analytics_client import AnalyticsServiceClient
 from ..models.subtask import Subtask
 from ..models.role import Role
 from ..models.enums import RoleType
+import logging
+
+# Configure logger
+logger = logging.getLogger(__name__)
 
 class TeamLeadWorkflow(BaseWorkflow):
     def __init__(self):
@@ -31,6 +35,24 @@ class TeamLeadWorkflow(BaseWorkflow):
         if not self.role_service.hasTeamLeadAccess(user_id, task.project_id) and not self.role_service.hasProjectManagerAccess(user_id, task.project_id):
             raise PermissionError("Only team leads or Project Managers can create subtasks")
         
+        # Handle due_date properly - ensure it's a string before conversion
+        due_date = None
+        if 'due_date' in subtask_data and subtask_data['due_date'] is not None:
+            try:
+                if isinstance(subtask_data['due_date'], str):
+                    due_date = datetime.fromisoformat(subtask_data['due_date'])
+                else:
+                    logger.warning(f"due_date is not a string: {type(subtask_data['due_date'])}")
+                    # Convert to string if possible, otherwise use None
+                    try:
+                        due_date = datetime.fromisoformat(str(subtask_data['due_date']))
+                    except (ValueError, TypeError):
+                        logger.error(f"Could not convert due_date to valid datetime: {subtask_data['due_date']}")
+                        due_date = None
+            except ValueError as e:
+                logger.error(f"Invalid date format for due_date: {subtask_data['due_date']} - {str(e)}")
+                due_date = None
+        
         # Create subtask
         subtask = Subtask(
             name=subtask_data['name'],
@@ -38,8 +60,8 @@ class TeamLeadWorkflow(BaseWorkflow):
             description=subtask_data['description'],
             project_id=task.project_id,
             priority=subtask_data.get('priority', 'MEDIUM'),
-            due_date=datetime.fromisoformat(subtask_data['due_date']) if 'due_date' in subtask_data else None,
-            milestone_id=subtask_data.get('milestone_id' , None),
+            due_date=due_date,
+            milestone_id=subtask_data.get('milestone_id', None),
             estimated_hours=subtask_data.get('estimated_hours', 0),
             tags=subtask_data.get('tags', [])
         )
@@ -166,7 +188,18 @@ class TeamLeadWorkflow(BaseWorkflow):
         if 'priority' in update_data and update_data['priority'] is not None:
             subtask.priority = update_data['priority']
         if 'due_date' in update_data and update_data['due_date'] is not None:
-            subtask.due_date = datetime.fromisoformat(update_data['due_date'])
+            try:
+                if isinstance(update_data['due_date'], str):
+                    subtask.due_date = datetime.fromisoformat(update_data['due_date'])
+                else:
+                    logger.warning(f"due_date is not a string in update: {type(update_data['due_date'])}")
+                    # Convert to string if possible, otherwise leave unchanged
+                    try:
+                        subtask.due_date = datetime.fromisoformat(str(update_data['due_date']))
+                    except (ValueError, TypeError):
+                        logger.error(f"Could not convert due_date to valid datetime: {update_data['due_date']}")
+            except ValueError as e:
+                logger.error(f"Invalid date format for due_date in update: {update_data['due_date']} - {str(e)}")
         if 'is_completed' in update_data and update_data['is_completed'] is not None:
             subtask.is_completed = update_data['is_completed']
         

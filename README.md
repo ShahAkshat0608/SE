@@ -199,8 +199,7 @@ taskman task remove <task_id>
 # Create a new project
 taskman project create --name "New Project" --description "Project description"
 
-# List all projects
-taskman project list
+
 
 # Get project details
 taskman project show <project_id>
