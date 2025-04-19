@@ -246,6 +246,47 @@ async def view_project_analytics(project_id: str):
 
 # --- Team Lead Endpoints ---
 
+@router.post("/tasks/{task_id}/subtasks_auto", response_model=Dict)
+async def create_subtasks_with_ai(
+    task_id: str,
+    main_task_description: str,
+    subtask_priority: Optional[str] = "MEDIUM",
+    subtask_due_date: Optional[str] = None,
+    subtask_milestone_id: Optional[str] = None,
+    subtask_tags: Optional[List[str]] = None,
+):
+    """Use AI to auto-generate and create 3–6 subtasks for a task (Team Lead)"""
+    current_user_payload = await verify_token({"credentials": access_token})
+    current_user = await get_current_user(current_user_payload)
+    workflow = TeamLeadWorkflow()
+    
+    # 👇 AI-based subtask generation
+    try:
+        subtask_list = subtask_ai_service.get_subtasks_from_ai(main_task_description)
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                            detail=f"AI subtask generation failed: {str(e)}")
+    
+    results = []
+    for subtask_obj in subtask_list:  
+        subtask_data = {
+            "name": subtask_obj.get("name"), 
+            "description": subtask_obj.get("description"),
+            "priority": subtask_obj.get("priority", subtask_priority),  # Default if key is not found
+            "due_date": subtask_obj.get("due_date", subtask_due_date),
+            "milestone_id": subtask_obj.get("milestone_id", subtask_milestone_id),
+            "tags": subtask_obj.get("tags", subtask_tags),
+        }
+
+        try:
+            result = workflow.create_subtask(current_user["id"], task_id, subtask_data)
+            results.append(result)
+        except PermissionError as e:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
+        except ValueError as e:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
 @router.post("/tasks/{task_id}/subtasks", response_model=Dict)
 async def create_subtask(
     task_id: str,
