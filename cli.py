@@ -780,7 +780,12 @@ def list_subtasks(task_id):
             click.echo("\nTask Subtasks:")
             click.echo("=" * 50)
             for i, subtask in enumerate(subtasks, 1):
-                click.echo(f"{i}. ID: {subtask['id']}, Name: {subtask['name']}, Status: {subtask['status']}, Priority: {subtask['priority']}")
+                # Use .get() method with default values to avoid KeyError
+                subtask_id = subtask.get('id', 'N/A')
+                name = subtask.get('name', 'N/A')
+                status = subtask.get('status', 'N/A')
+                priority = subtask.get('priority', 'N/A')
+                click.echo(f"{i}. ID: {subtask_id}, Name: {name}, Status: {status}, Priority: {priority}")
             click.echo("=" * 50)
         else:
             response.raise_for_status()
