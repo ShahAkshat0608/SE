@@ -1,4 +1,4 @@
-# CLI Task Manager (Microservice Architecture)
+# CLI Task Manager (Microservice Architecture) - Team 26
 
 A command-line task manager built with Python, using a microservice architecture.
 
