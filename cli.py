@@ -1234,6 +1234,65 @@ def auto_generate_subtasks(task_id, description, priority, due, milestone_id, ta
         click.echo(f"Failed to generate subtasks: {e}")
         logging.error(f"Subtask AI generation API call failed: {e}")
 
+@cli.command(name='my-subtasks')
+def get_my_subtasks():
+    """List all subtasks assigned to the current user."""
+    # Check login status
+    current_user = get_current_user_details()
+    if not current_user:
+        click.echo("Error: You must be logged in to view your subtasks. Use 'login' command first.")
+        return
+    
+    token = get_auth_token()
+    url = f"{PROJECT_SERVICE_BASE_URL}/api/user/subtasks"
+    
+    try:
+        response = requests.get(url, headers={"Authorization": f"Bearer {token}"}, timeout=5)
+        response.raise_for_status()
+        
+        subtasks = response.json()
+        
+        if not subtasks:
+            click.echo("You have no assigned subtasks.")
+            return
+        
+        click.echo("\nYour assigned subtasks:")
+        click.echo("=" * 80)
+        for i, subtask in enumerate(subtasks, 1):
+            status = "✓" if subtask.get("is_completed") else "□"
+            priority = subtask.get("priority", "MEDIUM")
+            name = subtask.get("name", "Unnamed subtask")
+            id = subtask.get("id", "unknown")
+            due_date = subtask.get("due_date", "No due date")
+            
+            # Format priority with color if available
+            if priority == "HIGH":
+                priority_text = click.style(f"[{priority}]", fg="red", bold=True)
+            elif priority == "MEDIUM":
+                priority_text = click.style(f"[{priority}]", fg="yellow")
+            else:
+                priority_text = click.style(f"[{priority}]", fg="green")
+            
+            # Format status with color
+            status_text = click.style(status, fg="green" if status == "✓" else "yellow")
+            
+            click.echo(f"{i}. {status_text} {priority_text} {name} (ID: {id})")
+            click.echo(f"   Due: {due_date}")
+            if "description" in subtask:
+                description = subtask["description"]
+                # Truncate long descriptions
+                if len(description) > 60:
+                    description = description[:57] + "..."
+                click.echo(f"   {description}")
+            click.echo("-" * 80)
+        
+        click.echo("\nTip: Use 'subtask <subtask_id> complete' to mark a subtask as completed.")
+        
+    except requests.exceptions.RequestException as e:
+        click.echo(f"Error fetching your subtasks: {e}")
+    except Exception as e:
+        click.echo(f"An unexpected error occurred: {e}")
+
 # Entry point for the CLI
 if __name__ == "__main__":
     cli()
