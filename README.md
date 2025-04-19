@@ -244,7 +244,7 @@ taskman subtask complete <subtask_id> [--undo]
 taskman subtask assign <subtask_id> --user-id <user_id>
 
 # Define dependency between subtasks
-taskman subtask dependency add <task_id> <subtask_id> <parent_subtask_id>
+taskman task subtask dependency add <task_id> <subtask_id> <parent_subtask_id>
 
 # View dependency tree
 taskman task dependency-tree <task_id>
