@@ -39,6 +39,7 @@ class SubtaskAIService:
             # Parse the string into a JSON object (Python dictionary/list)
             json_object = json.loads(json_string)
             print("Parsed JSON object:", json_object)  # Debugging line
+            print("Parsed JSON object: %s", json_object)  # Debug level for detailed info 
             return json_object
         except json.JSONDecodeError as e:
             # Handle invalid JSON format
@@ -46,13 +47,9 @@ class SubtaskAIService:
             return None
 
     def _parse_response_to_subtasks(self, response_text: str) :#-> List[Subtask]:
-        # try:
+        try:
             
-        cleaned_response = re.sub(r"^```json\s*|\s*```$", "", response_text).strip()
-        return self.string_to_json(cleaned_response)
-        #     raw_data = json.loads(cleaned_response)
-
-
-        #     return [Subtask(**item) for item in raw_data]
-        # except Exception as e:
-        #     raise ValueError(f"Failed to parse AI response to JSON list of subtasks: {e}")
+            cleaned_response = re.sub(r"^```json\s*|\s*```$", "", response_text).strip()
+            return self.string_to_json(cleaned_response)
+        except Exception as e:
+            raise ValueError(f"Failed to parse AI response to JSON list of subtasks: {e}")
