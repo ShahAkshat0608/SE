@@ -23,7 +23,7 @@ class UserResponse(UserBase):
     id: int
 
     class Config:
-        orm_mode = True # Compatibility with ORM models (like our Row objects)
+        # orm_mode = True # Compatibility with ORM models (like our Row objects)
         # Updated to use model_config in Pydantic v2
-        # from_attributes = True 
+        from_attributes = True 
         # model_config = {"from_attributes": True} 

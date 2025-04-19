@@ -1,11 +1,16 @@
 import sqlite3
+import os
 from typing import List, Optional
-DEFAULT_DB_PATH = "/Users/sarthak/Desktop/IIIT Course Work/Sem8/SE/project-3/SE/project-management-microservice/src/database/project_management.db"
+from ..models.project import Project
+
+# Update the database path to use a relative path
+current_dir = os.path.dirname(os.path.abspath(__file__))
+DEFAULT_DB_PATH = os.path.join(current_dir, "project_management.db")
 
 class ProjectDAL:
     def __init__(self, db_path=DEFAULT_DB_PATH):
         self.db_path = db_path
-        self.conn = sqlite3.connect(DEFAULT_DB_PATH)
+        self.conn = sqlite3.connect(db_path)
         self.conn.row_factory = sqlite3.Row
     
     def get_project_by_name(self, project_name: str) -> Optional[dict]:

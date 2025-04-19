@@ -1,6 +1,6 @@
 from typing import Dict, Any, List
-from models.response_models import TeamWorkloadResponse, MemberWorkload, WorkloadDistribution
-from utils.analytics_utils import calculate_workload_balance, calculate_workload_distribution
+from ...models.response_models import TeamWorkloadResponse, MemberWorkload, WorkloadDistribution
+from ...utils.analytics_utils import calculate_workload_balance, calculate_workload_distribution
 from .team_analytics_strategy import TeamAnalyticsStrategy
 
 class WorkloadAnalyticsStrategy(TeamAnalyticsStrategy[TeamWorkloadResponse]):

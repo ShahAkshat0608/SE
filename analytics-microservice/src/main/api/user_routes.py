@@ -2,8 +2,8 @@ from typing import Optional, Type
 from pydantic import BaseModel
 import time
 
-from models.response_models import UserProgressResponse, UserWorkloadResponse, UserComprehensiveResponse
-from utils.auth_utils import RolePermission
+from ..models.response_models import UserProgressResponse, UserWorkloadResponse, UserComprehensiveResponse
+from ..utils.auth_utils import RolePermission
 from .base_routes import BaseAnalyticsRoutes
 
 class UserAnalyticsRoutes(BaseAnalyticsRoutes):

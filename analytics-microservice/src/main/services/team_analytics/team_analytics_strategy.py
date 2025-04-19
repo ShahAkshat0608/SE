@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Dict, Any, TypeVar, Generic
-from data.data_access_test import TestDataAccess
-from data.cache import SimpleMemoryCache
+from ...data.data_access_test import TestDataAccess
+from ...data.cache import SimpleMemoryCache
 
 ResponseType = TypeVar('ResponseType')
 

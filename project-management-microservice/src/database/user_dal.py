@@ -1,6 +1,11 @@
 import sqlite3
+import os
 from typing import List, Optional
-DEFAULT_DB_PATH = "/Users/sarthak/Desktop/IIIT Course Work/Sem8/SE/project-3/SE/project-management-microservice/src/database/project_management.db"
+from ..models.user import User
+
+# Update the database path to use a relative path
+current_dir = os.path.dirname(os.path.abspath(__file__))
+DEFAULT_DB_PATH = os.path.join(current_dir, "project_management.db")
 
 class UserDAL:
     def __init__(self, db_path=DEFAULT_DB_PATH):

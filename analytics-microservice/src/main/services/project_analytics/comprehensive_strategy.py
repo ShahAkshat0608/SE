@@ -1,7 +1,7 @@
 from typing import Dict, Any, List
 from datetime import datetime
-from models.response_models import ProjectComprehensiveResponse, TeamReport, ProjectHealth, Recommendation
-from utils.analytics_utils import assess_project_health
+from ...models.response_models import ProjectComprehensiveResponse, TeamReport, ProjectHealth, Recommendation
+from ...utils.analytics_utils import assess_project_health
 from .project_analytics_strategy import ProjectAnalyticsStrategy
 from .progress_strategy import ProgressAnalyticsStrategy
 from .workload_strategy import WorkloadAnalyticsStrategy

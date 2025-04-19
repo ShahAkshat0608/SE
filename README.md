@@ -212,7 +212,7 @@ taskman project milestone add <project_id> --name "Milestone 1" --description "D
 taskman project milestone list <project_id>
 
 # Create a team
-taskman project team create <project_id> --name "Team A" --lead-id <user_id> --type "Development"
+taskman project team create <project_id> --name "Team A" --lead-id <user_id> --type "DEVELOPMENT"
 
 # List teams in a project
 taskman project team list <project_id>

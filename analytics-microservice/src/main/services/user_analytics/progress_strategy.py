@@ -1,6 +1,6 @@
 from typing import Dict, Any, List
-from models.response_models import UserProgressResponse, UserSubtaskDetail
-from utils.analytics_utils import calculate_completion_rate
+from ...models.response_models import UserProgressResponse, UserSubtaskDetail
+from ...utils.analytics_utils import calculate_completion_rate
 from .user_analytics_strategy import UserAnalyticsStrategy
 from datetime import datetime
 

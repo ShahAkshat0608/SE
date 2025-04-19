@@ -1,6 +1,6 @@
 from typing import Dict, Any, List
-from models.response_models import ProjectWorkloadResponse, TeamWorkload, ResourceAllocation
-from utils.analytics_utils import identify_project_bottlenecks
+from ...models.response_models import ProjectWorkloadResponse, TeamWorkload, ResourceAllocation
+from ...utils.analytics_utils import identify_project_bottlenecks
 from .project_analytics_strategy import ProjectAnalyticsStrategy
 
 class WorkloadAnalyticsStrategy(ProjectAnalyticsStrategy[ProjectWorkloadResponse]):

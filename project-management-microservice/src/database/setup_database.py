@@ -1,141 +1,163 @@
 import sqlite3
+import os
 from datetime import datetime
 
+# Update to use relative path
+current_dir = os.path.dirname(os.path.abspath(__file__))
+db_path = os.path.join(current_dir, "project_management.db")
+
 # Connect to SQLite database (or create it if it doesn't exist)
-conn = sqlite3.connect("project_management.db")
+conn = sqlite3.connect(db_path)
 cursor = conn.cursor()
+
+def table_exists(table_name):
+    """Check if a table exists in the database"""
+    cursor.execute("""
+    SELECT name FROM sqlite_master WHERE type='table' AND name=?;
+    """, (table_name,))
+    return cursor.fetchone() is not None
 
 # Create tables
 def create_tables():
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS users (
-        id TEXT PRIMARY KEY,
-        name TEXT NOT NULL,
-        email TEXT NOT NULL UNIQUE,
-        contact TEXT NOT NULL
-    );
-    """)
+    # Only create tables that don't exist
+    if not table_exists("users"):
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            email TEXT NOT NULL UNIQUE,
+            contact TEXT NOT NULL
+        );
+        """)
     
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS projects (
-        id TEXT PRIMARY KEY,
-        name TEXT NOT NULL,
-        description TEXT,
-        status TEXT NOT NULL, -- Enum: PLANNING, IN_PROGRESS, etc.
-        start_date TEXT NOT NULL,
-        target_end_date TEXT,
-        project_manager_id TEXT NOT NULL,
-        completion_percentage REAL DEFAULT 0.0,
-        priority TEXT, -- Enum: LOW, MEDIUM, HIGH, CRITICAL
-        client TEXT,
-        department TEXT,
-        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-        updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (project_manager_id) REFERENCES users(id) ON DELETE CASCADE
-    );
-    """)
+    if not table_exists("projects"):
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS projects (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            description TEXT,
+            status TEXT NOT NULL, -- Enum: PLANNING, IN_PROGRESS, etc.
+            start_date TEXT NOT NULL,
+            target_end_date TEXT,
+            project_manager_id TEXT NOT NULL,
+            completion_percentage REAL DEFAULT 0.0,
+            priority TEXT, -- Enum: LOW, MEDIUM, HIGH, CRITICAL
+            client TEXT,
+            department TEXT,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (project_manager_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+        """)
 
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS teams (
-        id TEXT PRIMARY KEY,
-        name TEXT NOT NULL,
-        project_id TEXT NOT NULL,
-        team_lead_id TEXT NOT NULL,
-        type TEXT, -- Enum: RESEARCH, ANALYSIS, etc.
-        FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
-        FOREIGN KEY (team_lead_id) REFERENCES users(id) ON DELETE CASCADE
-    );
-    """)
+    if not table_exists("teams"):
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS teams (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            project_id TEXT NOT NULL,
+            team_lead_id TEXT NOT NULL,
+            type TEXT, -- Enum: RESEARCH, ANALYSIS, etc.
+            FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+            FOREIGN KEY (team_lead_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+        """)
 
-    # create table for team members
-    cursor.execute("""
-    CREATE TABLE team_members (
-            user_id VARCHAR(36) NOT NULL,
-            team_id VARCHAR(36) NOT NULL,
-            joined_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            PRIMARY KEY (user_id, team_id),
-            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    if not table_exists("team_members"):
+        # create table for team members
+        cursor.execute("""
+        CREATE TABLE team_members (
+                user_id VARCHAR(36) NOT NULL,
+                team_id VARCHAR(36) NOT NULL,
+                joined_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (user_id, team_id),
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE
+                );
+                    """)
+
+    if not table_exists("tasks"):
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS tasks (
+            id TEXT PRIMARY KEY,
+            project_id TEXT NOT NULL,
+            team_id TEXT NOT NULL,
+            name TEXT NOT NULL,
+            description TEXT,
+            status TEXT NOT NULL, -- Enum: BACKLOG, TO_DO, etc.
+            priority TEXT NOT NULL, -- Enum: LOW, MEDIUM, HIGH, CRITICAL
+            created_at TEXT NOT NULL,
+            target_due_date TEXT,
+            assigned_team_id TEXT,
+            FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
             FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE
-            );
-                   """)
+        );
+        """)
 
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS tasks (
-        id TEXT PRIMARY KEY,
-        project_id TEXT NOT NULL,
-        team_id TEXT NOT NULL,
-        name TEXT NOT NULL,
-        description TEXT,
-        status TEXT NOT NULL, -- Enum: BACKLOG, TO_DO, etc.
-        priority TEXT NOT NULL, -- Enum: LOW, MEDIUM, HIGH, CRITICAL
-        created_at TEXT NOT NULL,
-        target_due_date TEXT,
-        assigned_team_id TEXT,
-        FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
-        FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE
-    );
-    """)
+    if not table_exists("subtasks"):
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS subtasks (
+            id TEXT PRIMARY KEY,
+            task_id TEXT NOT NULL,
+            name TEXT NOT NULL,
+            description TEXT,
+            project_id TEXT NOT NULL,
+            priority TEXT NOT NULL, -- Enum: LOW, MEDIUM, HIGH
+            due_date TEXT,
+            completed INTEGER NOT NULL DEFAULT 0, -- 0 = False, 1 = True
+            assigned INTEGER NOT NULL DEFAULT 0, -- 0 = False, 1 = True
+            assigned_to TEXT,
+            estimated_hours REAL DEFAULT 0.0,
+            parent_subtask_id TEXT,
+            tags TEXT, -- JSON array of tags
+            milestone_id TEXT,
+            is_completed INTEGER NOT NULL DEFAULT 0, -- 0 = False, 1 = True
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE,
+            FOREIGN KEY (assigned_to) REFERENCES users(id) ON DELETE CASCADE,
+            FOREIGN KEY (milestone_id) REFERENCES milestones(id) ON DELETE CASCADE,
+            FOREIGN KEY (parent_subtask_id) REFERENCES subtasks(id) ON DELETE SET NULL
+            FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+        );
+        """)
 
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS subtasks (
-        id TEXT PRIMARY KEY,
-        task_id TEXT NOT NULL,
-        name TEXT NOT NULL,
-        description TEXT,
-        project_id TEXT NOT NULL,
-        priority TEXT NOT NULL, -- Enum: LOW, MEDIUM, HIGH
-        due_date TEXT,
-        completed INTEGER NOT NULL DEFAULT 0, -- 0 = False, 1 = True
-        assigned INTEGER NOT NULL DEFAULT 0, -- 0 = False, 1 = True
-        assigned_to TEXT,
-        estimated_hours REAL DEFAULT 0.0,
-        parent_subtask_id TEXT,
-        tags TEXT, -- JSON array of tags
-        milestone_id TEXT,
-        is_completed INTEGER NOT NULL DEFAULT 0, -- 0 = False, 1 = True
-        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE,
-        FOREIGN KEY (assigned_to) REFERENCES users(id) ON DELETE CASCADE,
-        FOREIGN KEY (milestone_id) REFERENCES milestones(id) ON DELETE CASCADE,
-        FOREIGN KEY (parent_subtask_id) REFERENCES subtasks(id) ON DELETE SET NULL
-        FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
-    );
-    """)
+    if not table_exists("milestones"):
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS milestones (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            description TEXT,
+            project_id TEXT NOT NULL,
+            sequence_no INTEGER NOT NULL CHECK (sequence_no > 0),
+            due_date TEXT,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+        );
+        """)
 
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS milestones (
-        id TEXT PRIMARY KEY,
-        name TEXT NOT NULL,
-        description TEXT,
-        project_id TEXT NOT NULL,
-        sequence_no INTEGER NOT NULL CHECK (sequence_no > 0),
-        due_date TEXT,
-        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-        updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
-    );
-    """)
+    if not table_exists("dependency_tree"):
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS dependency_tree (
+            task_id TEXT PRIMARY KEY,
+            root_subtask_id TEXT,
+            dependencies TEXT, -- JSON object to store dependencies
+            FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE,
+            FOREIGN KEY (root_subtask_id) REFERENCES subtasks(id) ON DELETE SET NULL
+        );
+        """)
 
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS dependency_tree (
-        task_id TEXT PRIMARY KEY,
-        root_subtask_id TEXT,
-        dependencies TEXT, -- JSON object to store dependencies
-        FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE,
-        FOREIGN KEY (root_subtask_id) REFERENCES subtasks(id) ON DELETE SET NULL
-    );
-    """)
-
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS roles (
-        id TEXT PRIMARY KEY,
-        user_id TEXT NOT NULL,
-        project_id TEXT NOT NULL,
-        role TEXT NOT NULL,
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-        FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
-    );
-    """)
+    if not table_exists("roles"):
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS roles (
+            id TEXT PRIMARY KEY,
+            user_id TEXT NOT NULL,
+            project_id TEXT NOT NULL,
+            role TEXT NOT NULL,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+            FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+        );
+        """)
 
 # Insert sample data
 def insert_sample_data():
@@ -210,73 +232,34 @@ def insert_sample_data():
         ("role2", "user2", "project2", "Team Lead")
     ])         
 
-
 # Run the setup
+create_tables()
 
-# create_tables()
-# insert_sample_data()
+# Only insert sample data if the tables are empty
+cursor.execute("SELECT COUNT(*) FROM projects")
+project_count = cursor.fetchone()[0]
+
+if project_count == 0:
+    print("Tables are empty, inserting sample data...")
+    insert_sample_data()
+else:
+    print(f"Tables already contain data (found {project_count} projects), skipping sample data insertion.")
 
 # command to get the current table names
-# cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
-# tables = cursor.fetchall()
-# print("Tables in the database:")
-# for table in tables:
-#     print(table[0])
+cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+tables = cursor.fetchall()
+print("Tables in the database:")
+for table in tables:
+    print(table[0])
 
-# # get the entried table projects
-# cursor.execute("SELECT * FROM projects;")
-# rows = cursor.fetchall()    
-# print("Entries in the projects table:")
-# for row in rows:
-#     print(row)
-
-# # ALTER teams table to add type , created_at and updated_at columns
-# cursor.execute("""
-# ALTER TABLE teams
-# ADD COLUMN created_at TEXT DEFAULT CURRENT_TIMESTAMP;
-# """)
-
-# cursor.execute("""
-# ALTER TABLE teams
-# ADD COLUMN updated_at TEXT DEFAULT CURRENT_TIMESTAMP;
-# """)
-
-# print all the entries in the teams table
-# cursor.execute("SELECT * FROM team_members;")
-# rows = cursor.fetchall()
-# print("Entries in the teams members table:")
-# for row in rows:
-#     print(row)
-
-# # same with roles table
-# cursor.execute("SELECT * FROM roles;")
-# rows = cursor.fetchall()
-# print("Entries in the roles table:")
-# for row in rows:
-#     print(row)
-
-# check entries of dependency_tree table
-cursor.execute("SELECT * FROM dependency_tree;")
-rows = cursor.fetchall()
-print("Entries in the dependency_tree table:")
+# get the entries table projects
+cursor.execute("SELECT * FROM projects;")
+rows = cursor.fetchall()    
+print("Entries in the projects table:")
 for row in rows:
     print(row)
 
-# Empty the dependency_tree table , alter to add a column for id
-# cursor.execute("DROP TABLE IF EXISTS dependency_tree;")
-# cursor.execute("""
-# CREATE TABLE IF NOT EXISTS dependency_tree (
-#     id TEXT PRIMARY KEY,
-#     task_id TEXT NOT NULL,
-#     root_subtask_id TEXT,
-#     dependencies TEXT, -- JSON object to store dependencies
-#     FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE,
-#     FOREIGN KEY (root_subtask_id) REFERENCES subtasks(id) ON DELETE SET NULL
-# );
-# """)
-
-# Commit changes and close the connection
+# Commit the changes and close the connection
 conn.commit()
 conn.close()
-
-print("Database setup complete with sample data!")
+print(f"Database setup complete at: {db_path}")

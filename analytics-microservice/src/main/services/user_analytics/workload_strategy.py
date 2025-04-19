@@ -1,6 +1,6 @@
 from typing import Dict, Any, List
-from models.response_models import UserWorkloadResponse, UserSubtaskDetail, PriorityDistribution
-from utils.analytics_utils import group_subtasks_by_priority, calculate_due_dates_distribution
+from ...models.response_models import UserWorkloadResponse, UserSubtaskDetail, PriorityDistribution
+from ...utils.analytics_utils import group_subtasks_by_priority, calculate_due_dates_distribution
 from .user_analytics_strategy import UserAnalyticsStrategy
 from datetime import datetime
 

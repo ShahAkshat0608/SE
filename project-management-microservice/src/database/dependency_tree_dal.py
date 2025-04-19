@@ -1,9 +1,13 @@
 import sqlite3
+import os
 import json
-from typing import Optional
+from typing import Optional, Dict
 from ..models.dependency_tree import DependencyTree
 from uuid import uuid4
-DEFAULT_DB_PATH = "/Users/sarthak/Desktop/IIIT Course Work/Sem8/SE/project-3/SE/project-management-microservice/src/database/project_management.db"
+
+# Update the database path to use a relative path
+current_dir = os.path.dirname(os.path.abspath(__file__))
+DEFAULT_DB_PATH = os.path.join(current_dir, "project_management.db")
 
 class DependencyTreeDAL:
     def __init__(self, db_path=DEFAULT_DB_PATH):

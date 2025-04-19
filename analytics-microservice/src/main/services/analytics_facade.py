@@ -1,22 +1,22 @@
 from typing import Dict, Any, Optional
 from enum import Enum
 
-from services.project_analytics.project_analytics_strategy import ProjectAnalyticsContext
-from services.project_analytics.progress_strategy import ProgressAnalyticsStrategy as ProjectProgressStrategy
-from services.project_analytics.workload_strategy import WorkloadAnalyticsStrategy as ProjectWorkloadStrategy
-from services.project_analytics.comprehensive_strategy import ComprehensiveAnalyticsStrategy as ProjectComprehensiveStrategy
+from ..services.project_analytics.project_analytics_strategy import ProjectAnalyticsContext
+from ..services.project_analytics.progress_strategy import ProgressAnalyticsStrategy as ProjectProgressStrategy
+from ..services.project_analytics.workload_strategy import WorkloadAnalyticsStrategy as ProjectWorkloadStrategy
+from ..services.project_analytics.comprehensive_strategy import ComprehensiveAnalyticsStrategy as ProjectComprehensiveStrategy
 
-from services.team_analytics.team_analytics_strategy import TeamAnalyticsContext
-from services.team_analytics.progress_strategy import ProgressAnalyticsStrategy as TeamProgressStrategy
-from services.team_analytics.workload_strategy import WorkloadAnalyticsStrategy as TeamWorkloadStrategy
-from services.team_analytics.comprehensive_strategy import ComprehensiveAnalyticsStrategy as TeamComprehensiveStrategy
+from ..services.team_analytics.team_analytics_strategy import TeamAnalyticsContext
+from ..services.team_analytics.progress_strategy import ProgressAnalyticsStrategy as TeamProgressStrategy
+from ..services.team_analytics.workload_strategy import WorkloadAnalyticsStrategy as TeamWorkloadStrategy
+from ..services.team_analytics.comprehensive_strategy import ComprehensiveAnalyticsStrategy as TeamComprehensiveStrategy
 
-from services.user_analytics.user_analytics_strategy import UserAnalyticsContext
-from services.user_analytics.progress_strategy import ProgressAnalyticsStrategy as UserProgressStrategy
-from services.user_analytics.workload_strategy import WorkloadAnalyticsStrategy as UserWorkloadStrategy
-from services.user_analytics.comprehensive_strategy import ComprehensiveAnalyticsStrategy as UserComprehensiveStrategy
+from ..services.user_analytics.user_analytics_strategy import UserAnalyticsContext
+from ..services.user_analytics.progress_strategy import ProgressAnalyticsStrategy as UserProgressStrategy
+from ..services.user_analytics.workload_strategy import WorkloadAnalyticsStrategy as UserWorkloadStrategy
+from ..services.user_analytics.comprehensive_strategy import ComprehensiveAnalyticsStrategy as UserComprehensiveStrategy
 
-from utils.analytics_utils import generate_visualization_data
+from ..utils.analytics_utils import generate_visualization_data
 
 
 class ReportType(str, Enum):

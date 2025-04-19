@@ -1,6 +1,6 @@
 from typing import Dict, Any, List
-from models.response_models import TeamProgressResponse, MemberProgress, MilestoneProgress, MilestonesProgress
-from utils.analytics_utils import calculate_completion_rate, calculate_milestone_completion
+from ...models.response_models import TeamProgressResponse, MemberProgress, MilestoneProgress, MilestonesProgress
+from ...utils.analytics_utils import calculate_completion_rate, calculate_milestone_completion
 from .team_analytics_strategy import TeamAnalyticsStrategy
 
 class ProgressAnalyticsStrategy(TeamAnalyticsStrategy[TeamProgressResponse]):

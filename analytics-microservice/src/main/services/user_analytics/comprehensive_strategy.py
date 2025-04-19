@@ -1,6 +1,6 @@
 from typing import Dict, Any, List
-from models.response_models import UserComprehensiveResponse, HistoricalPerformance, Recommendation
-from utils.analytics_utils import generate_recommendations
+from ...models.response_models import UserComprehensiveResponse, HistoricalPerformance, Recommendation
+from ...utils.analytics_utils import generate_recommendations
 from .user_analytics_strategy import UserAnalyticsStrategy
 from .progress_strategy import ProgressAnalyticsStrategy
 from .workload_strategy import WorkloadAnalyticsStrategy

@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="task-manager-monorepo",
-    version="0.2.0",
+    version="0.3.0",
     packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
     install_requires=[
         "click",
@@ -12,6 +12,14 @@ setup(
         "requests",
         "pydantic",
         "pydantic-settings",
+        "python-dotenv",
+        "sqlalchemy",
+        "passlib",
+        "python-jose",
+        "python-multipart",
+        "matplotlib",
+        "pandas",
+        "bcrypt",
     ],
     entry_points="""
         [console_scripts]

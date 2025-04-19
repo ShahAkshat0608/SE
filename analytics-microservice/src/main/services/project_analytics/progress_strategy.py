@@ -1,6 +1,6 @@
 from typing import Dict, Any, List
-from models.response_models import ProjectProgressResponse, TeamStat, MilestoneProgress, MilestonesProgress
-from utils.analytics_utils import calculate_completion_rate, calculate_milestone_completion, calculate_estimated_completion_date
+from ...models.response_models import ProjectProgressResponse, TeamStat, MilestoneProgress, MilestonesProgress
+from ...utils.analytics_utils import calculate_completion_rate, calculate_milestone_completion, calculate_estimated_completion_date
 from .project_analytics_strategy import ProjectAnalyticsStrategy
 from datetime import datetime
 

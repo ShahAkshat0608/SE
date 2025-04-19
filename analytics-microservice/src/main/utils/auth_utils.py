@@ -3,9 +3,8 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import jwt
 from datetime import datetime, timedelta
 from typing import Dict, Optional, List
-from data.data_access_test import TestDataAccess
+from ..data.data_access_test import TestDataAccess
 import os
-from dotenv import load_dotenv
 
 # JWT security scheme
 security = HTTPBearer()
@@ -16,10 +15,15 @@ security = HTTPBearer()
 # TOKEN_EXPIRE_MINUTES = 60 * 24  # 24 hours
 
 # Load environment variables from .env file
-load_dotenv()
 JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY')
 JWT_ALGORITHM = os.getenv('JWT_ALGORITHM')
-TOKEN_EXPIRE_MINUTES = eval(os.getenv('TOKEN_EXPIRE_MINUTES'))
+# Get the value, default to '1440' if not set or empty
+token_expire_str = os.getenv('TOKEN_EXPIRE_MINUTES', '1440') 
+try:
+    TOKEN_EXPIRE_MINUTES = int(token_expire_str) 
+except (ValueError, TypeError):
+    # Fallback if the value is invalid
+    TOKEN_EXPIRE_MINUTES = 1440 
 
 class RolePermission:
     """Role-based permission constants"""

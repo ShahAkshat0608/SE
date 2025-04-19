@@ -1,9 +1,13 @@
 import sqlite3
-from typing import List, Optional
+import os
+import json
+from typing import List, Optional, Dict
 from datetime import datetime
 from ..models.subtask import Subtask
-import json
-DEFAULT_DB_PATH = "/Users/sarthak/Desktop/IIIT Course Work/Sem8/SE/project-3/SE/project-management-microservice/src/database/project_management.db"
+
+# Update the database path to use a relative path
+current_dir = os.path.dirname(os.path.abspath(__file__))
+DEFAULT_DB_PATH = os.path.join(current_dir, "project_management.db")
 
 class SubtaskDAL:
     def __init__(self, db_path=DEFAULT_DB_PATH):

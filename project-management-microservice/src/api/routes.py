@@ -14,6 +14,10 @@ from datetime import timedelta
 import time
 from ..utils.auth_token_gen import create_access_token
 from ..utils.auth_utils import verify_token
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+
+# Initialize security for Bearer token authentication
+security = HTTPBearer()
 
 router = APIRouter()
 user_client = APIClient()
@@ -52,23 +56,26 @@ async def get_user_role_in_project(project_id: str):
 
 # --- Project Manager Endpoints ---
 
-@router.get("/projects/{project_name}")
-async def get_project_details(project_name: str):
+@router.get("/projects/{project_identifier}")
+async def get_project_details(project_identifier: str):
     print(f"Access Token: {access_token}")
-    """Get project details"""
+    """Get project details by name or ID"""
     workflow = ProjectManagerWorkflow()
     current_user_payload = await verify_token({"credentials": access_token})
     current_user = await get_current_user(current_user_payload)
     try:
-        project_details = workflow.get_project_details_by_name(project_name)
+        # First try to get the project by ID (if identifier starts with "project-")
+        if project_identifier.startswith("project-"):
+            project_details = workflow.get_project_details(project_identifier)
+        else:
+            # If not an ID, try by name
+            project_details = workflow.get_project_details_by_name(project_identifier)
 
         # Check if user has access to this project
         user_role = workflow.get_user_role_in_project(current_user["id"], project_details["id"])
         if not user_role:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You don't have access to this project")
         
-        # # Get project details
-        # return workflow.get_project_details(project_id)
         return project_details
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
@@ -587,7 +594,7 @@ async def register_user(
     }
 
 @router.post("/auth/login", response_model=Dict , status_code=status.HTTP_200_OK)
-async def login_user(email : str, password: str):
+async def login_user(email: str, password: str):
     """
     Login a user and return access token
     """
@@ -617,7 +624,7 @@ async def login_user(email : str, password: str):
     )
     
     access_token = access_token_local
-    return {
+    response_data = {
         "access_token": access_token,
         "token_type": "bearer",
         "user": {
@@ -627,6 +634,7 @@ async def login_user(email : str, password: str):
             "role": user.get("role", "user")  # Include global role if provided
         }
     }
+    return response_data
 
 @router.post("/auth/logout", response_model=Dict)
 async def logout_user():
@@ -645,26 +653,33 @@ async def logout_user():
     }
 
 @router.get("/auth/me", response_model=Dict)
-async def get_current_user_profile():
+async def get_current_user_profile(credentials: HTTPAuthorizationCredentials = Depends(security)):
     """
     Get the current authenticated user's profile
     """
-    current_user_payload = await verify_token({"credentials": access_token})
-    current_user = await get_current_user(current_user_payload)
-    
-    user_details = user_client.get_user_details(int(current_user["id"]))
-    
-    if "error" in user_details:
-        status_code = {
-            "Not Found": status.HTTP_404_NOT_FOUND,
-            "Bad Request": status.HTTP_400_BAD_REQUEST
-        }.get(user_details["error"], status.HTTP_400_BAD_REQUEST)
+    try:
+        current_user_payload = await verify_token({"credentials": credentials.credentials})
+        current_user = await get_current_user(current_user_payload)
+        
+        user_details = user_client.get_user_details(int(current_user["id"]))
+        
+        if "error" in user_details:
+            status_code = {
+                "Not Found": status.HTTP_404_NOT_FOUND,
+                "Bad Request": status.HTTP_400_BAD_REQUEST
+            }.get(user_details["error"], status.HTTP_400_BAD_REQUEST)
+            raise HTTPException(
+                status_code=status_code,
+                detail=user_details.get("detail", "Failed to retrieve user details")
+            )
+        
+        return user_details
+    except Exception as e:
         raise HTTPException(
-            status_code=status_code,
-            detail=user_details.get("detail", "Failed to retrieve user details")
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Authentication failed: {str(e)}",
+            headers={"WWW-Authenticate": "Bearer"},
         )
-    
-    return user_details
 
 @router.get("/auth/users/{user_id}", response_model=Dict)
 async def get_user_details(user_id: int):

@@ -1,10 +1,15 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
-from config.settings import settings
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
+from .config.settings import settings
 
 # Import the unified API router
-from api import api_router
+from .api import api_router
 
 # Create FastAPI app
 app = FastAPI(

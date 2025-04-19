@@ -4,8 +4,8 @@ from typing import Dict, Any, Callable, Awaitable, Type, Optional
 from pydantic import BaseModel
 from abc import ABC, abstractmethod
 
-from services.analytics_facade import AnalyticsFacade, ReportType
-from utils.auth_utils import get_current_user, check_analytics_permission, RolePermission
+from ..services.analytics_facade import AnalyticsFacade, ReportType
+from ..utils.auth_utils import get_current_user, check_analytics_permission, RolePermission
 
 class BaseAnalyticsRoutes(ABC):
     """

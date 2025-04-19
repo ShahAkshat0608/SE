@@ -2,8 +2,8 @@ from typing import Optional, Type
 from fastapi import Query, Request, Depends
 from pydantic import BaseModel
 
-from models.response_models import TeamProgressResponse, TeamWorkloadResponse, TeamComprehensiveResponse
-from utils.auth_utils import RolePermission, get_current_user
+from ..models.response_models import TeamProgressResponse, TeamWorkloadResponse, TeamComprehensiveResponse
+from ..utils.auth_utils import RolePermission, get_current_user
 from .base_routes import BaseAnalyticsRoutes
 
 class TeamAnalyticsRoutes(BaseAnalyticsRoutes):

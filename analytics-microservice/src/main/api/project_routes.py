@@ -1,8 +1,8 @@
 from typing import Optional, Type
 from pydantic import BaseModel
 
-from models.response_models import ProjectProgressResponse, ProjectWorkloadResponse, ProjectComprehensiveResponse
-from utils.auth_utils import RolePermission
+from ..models.response_models import ProjectProgressResponse, ProjectWorkloadResponse, ProjectComprehensiveResponse
+from ..utils.auth_utils import RolePermission
 from .base_routes import BaseAnalyticsRoutes
 
 class ProjectAnalyticsRoutes(BaseAnalyticsRoutes):

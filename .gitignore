@@ -128,7 +128,17 @@ dmypy.json
 
 # User-specific files (like session state)
 .logged_in_user
+.auth_token
+tasks.json
 
 # Test databases (if following a pattern)
 # Adjust if your test DB name is different
-user-management/src/test/data/test_users.db 
+user-management/src/test/data/test_users.db
+
+# Test directories
+/test_results/
+/.pytest_cache/
+
+# Log files
+/logs/
+*.log 

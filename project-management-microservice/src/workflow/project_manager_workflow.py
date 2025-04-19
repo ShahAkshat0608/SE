@@ -24,6 +24,14 @@ class ProjectManagerWorkflow(BaseWorkflow):
         self.project_service =  ProjectService() # Assuming this is set in the base class
         self.task_manager_service = TaskManagerService() # Assuming this is set in the base class
     
+    def get_project_details(self, project_id: str) -> Dict:
+        """Get just the project details by ID using the project service"""
+        project_service = self.project_service
+        project = project_service.getProject(project_id)
+        if not project:
+            raise ValueError(f"Project with ID {project_id} not found.")
+        return project.to_dict()
+    
     def get_project_details_by_name(self, project_name: str) -> Dict:
         """Get just the project details by name using the project service"""
         project_service = self.project_service
