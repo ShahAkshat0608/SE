@@ -6,6 +6,7 @@ from ..models.user_model import (
     find_user_by_email,
     find_user_by_id
 )
+from .notification_client import send_welcome_email
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -24,6 +25,13 @@ def register_user_service(name: str, email: str, password: str, contact: str | N
 
     if user:
         logging.info(f"User '{email}' registered successfully.")
+        # Send welcome email to the user
+        try:
+            send_welcome_email(user["id"], email, name)
+        except Exception as e:
+            logging.error(f"Failed to send welcome email to {email}: {e}")
+            # Continue even if email fails, as the user is already registered
+        
         # Return the created user data (excluding password hash)
         return user
     else:
