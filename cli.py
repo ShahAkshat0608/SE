@@ -1162,6 +1162,57 @@ def process_calendar_queue():
         click.echo(f"Failed to process calendar queue: {e}")
         logging.error(f"Calendar queue processing API call failed: {e}")
 
+@subtask_group.command(name='auto-generate')
+@click.argument('task_id')
+@click.option('--description', required=True, help='Main task description to generate subtasks from')
+@click.option('--priority', type=click.Choice(['LOW', 'MEDIUM', 'HIGH']), default='MEDIUM', help='Default priority for generated subtasks')
+@click.option('--due', help='Due date for generated subtasks (YYYY-MM-DD)')
+@click.option('--milestone-id', help='Milestone ID for generated subtasks')
+@click.option('--tags', help='Comma-separated tags for generated subtasks')
+def auto_generate_subtasks(task_id, description, priority, due, milestone_id, tags):
+    """Use AI to automatically generate 3-6 subtasks for a task."""
+    token = get_auth_token()
+    if not token:
+        click.echo("You must be logged in to use this command.")
+        return
+        
+    try:
+        url = f"{PROJECT_SERVICE_BASE_URL}/api/tasks/{task_id}/subtasks_auto"
+        
+        # Build request parameters
+        payload = {
+            "main_task_description": description,
+            "subtask_priority": priority
+        }
+        
+        if due:
+            payload["subtask_due_date"] = due
+        if milestone_id:
+            payload["subtask_milestone_id"] = milestone_id
+        if tags:
+            payload["subtask_tags"] = tags.split(',')
+            
+        response = requests.post(url, params=payload, headers={"Authorization": f"Bearer {token}"}, timeout=30)
+        
+        if response.status_code == 200:
+            results = response.json()
+            if not results:
+                click.echo("No subtasks were generated.")
+                return
+                
+            click.echo("\nAI-generated subtasks:")
+            click.echo("=" * 50)
+            for i, subtask in enumerate(results, 1):
+                click.echo(f"{i}. {subtask.get('name')}: {subtask.get('description')}")
+                click.echo(f"   Priority: {subtask.get('priority')}, ID: {subtask.get('id')}")
+            click.echo("=" * 50)
+            click.echo(f"Successfully generated {len(results)} subtasks!")
+        else:
+            response.raise_for_status()
+    except requests.exceptions.RequestException as e:
+        click.echo(f"Failed to generate subtasks: {e}")
+        logging.error(f"Subtask AI generation API call failed: {e}")
+
 # Entry point for the CLI
 if __name__ == "__main__":
     cli()

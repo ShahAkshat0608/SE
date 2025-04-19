@@ -235,6 +235,9 @@ taskman task subtask add <task_id> --name "Subtask name" --description "Descript
 # List subtasks
 taskman task subtask list <task_id>
 
+# Auto-generate subtasks using AI
+taskman task subtask auto-generate <task_id> --description "Main task description" [--priority HIGH|MEDIUM|LOW] [--due "2024-06-01"] [--milestone-id <milestone_id>] [--tags "tag1,tag2,tag3"]
+
 # Mark subtask as completed/uncompleted
 taskman subtask complete <subtask_id> [--undo]
 
