@@ -224,13 +224,13 @@ taskman team member add <team_id> --user-id <user_id>
 taskman team member remove <team_id> --user-id <user_id>
 
 # Create a task for a team
-taskman team task create <project_id> <team_id> --name "Task name" --description "Description" --priority high --due "2024-06-01"
+taskman team task create <project_id> <team_id> --name "Task name" --description "Description" --priority HIGH --due "2024-06-01"
 
 # List team tasks
 taskman team task list <project_id> <team_id>
 
 # Create a subtask
-taskman task subtask add <task_id> --name "Subtask name" --description "Description" --priority medium --due "2024-06-01"
+taskman task subtask add <task_id> --name "Subtask name" --description "Description" --priority MEDIUM --due "2024-06-01"
 
 # List subtasks
 taskman task subtask list <task_id>

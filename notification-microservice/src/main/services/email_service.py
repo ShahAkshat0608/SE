@@ -24,6 +24,10 @@ def send_email(to_email, subject, body):
         logging.error("Email credentials not set in environment variables")
         return False
 
+    # Log credentials availability (without revealing actual values)
+    logging.info(f"Attempting to send email from {EMAIL_USERNAME} to {to_email}")
+    logging.info(f"Email credentials present: Username={bool(EMAIL_USERNAME)}, Password={bool(EMAIL_PASSWORD)}")
+
     message = MIMEMultipart()
     message["From"] = EMAIL_USERNAME  # Simple email address format that works consistently
     message["To"] = to_email
@@ -33,22 +37,39 @@ def send_email(to_email, subject, body):
     message.attach(MIMEText(body, "plain"))
     
     try:
+        # Debug logging
+        logging.info(f"Connecting to SMTP server {SMTP_SERVER}:{SMTP_PORT}")
+        
         # Create a secure connection with the server using SSL
         server = smtplib.SMTP_SSL(SMTP_SERVER, SMTP_PORT)
         
         # Login to email account
+        logging.info("Attempting to login to email server...")
         server.login(EMAIL_USERNAME, EMAIL_PASSWORD)
+        logging.info("Login successful")
         
         # Send email
+        logging.info("Sending email message...")
         server.send_message(message)
+        logging.info("Email message sent")
         
         # Terminate the session
         server.quit()
+        logging.info("SMTP connection closed")
         
         logging.info(f"Email sent successfully to {to_email}")
         return True
+    except smtplib.SMTPAuthenticationError as e:
+        logging.error(f"SMTP Authentication Error: {e}")
+        logging.error("This usually means incorrect username/password or Google security settings blocking the login.")
+        logging.error("Check if 'Less secure app access' is enabled or use an App Password.")
+        return False
+    except smtplib.SMTPException as e:
+        logging.error(f"SMTP Error: {e}")
+        return False
     except Exception as e:
         logging.error(f"Failed to send email to {to_email}: {e}")
+        logging.error(f"Exception type: {type(e).__name__}")
         return False
 
 def process_pending_notifications(batch_size=10):

@@ -28,4 +28,4 @@ if __name__ == "__main__":
         module_path = "main:app"
     
     # Run the service
-    uvicorn.run(module_path, host="0.0.0.0", port=8002, reload=True) 
+    uvicorn.run(module_path, host="0.0.0.0", port=8004, reload=True) 

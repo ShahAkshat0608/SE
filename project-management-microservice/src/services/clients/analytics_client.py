@@ -15,7 +15,7 @@ class AnalyticsServiceClient:
     
     def __init__(
         self, 
-        base_url: str = "http://localhost:8002/api/analytics",
+        base_url: str = "http://localhost:8003/api/analytics",
         service_secret: str = "your-secret-key-for-development-only",
         timeout: int = 10,
         enable_cache: bool = True,

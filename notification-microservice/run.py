@@ -25,5 +25,5 @@ if __name__ == "__main__":
         print("WARNING: Email credentials not properly loaded. Email notifications may not work.")
     
     # Run the service using the full module path
-    port = int(os.environ.get("PORT", 8002))
+    port = int(os.environ.get("PORT", 8004))
     uvicorn.run("src.main.main:app", host="0.0.0.0", port=port, reload=True) 

@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     API_PREFIX: str = "/api/analytics"
     DEBUG: bool = True
     
-    # Authentication
+    # Authentication - ensure this matches project-management-microservice
     JWT_SECRET_KEY: str = "your-secret-key-for-development-only"
     JWT_ALGORITHM: str = "HS256"
     

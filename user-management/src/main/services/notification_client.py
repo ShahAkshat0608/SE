@@ -7,11 +7,14 @@ from datetime import datetime
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Configuration
-NOTIFICATION_SERVICE_URL = os.environ.get("NOTIFICATION_SERVICE_URL", "http://localhost:8002")
+NOTIFICATION_SERVICE_URL = os.environ.get("NOTIFICATION_SERVICE_URL", "http://localhost:8004")
 
 def send_welcome_email(user_id, email, name):
     """Send a welcome email to a newly registered user."""
     endpoint = f"{NOTIFICATION_SERVICE_URL}/notifications/email"
+    
+    logging.info(f"Preparing welcome email for user {user_id} ({email})")
+    logging.info(f"Using notification service endpoint: {endpoint}")
     
     subject = "Welcome to our Task Management System!"
     body = f"""

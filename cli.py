@@ -14,6 +14,7 @@ PROJECT_SERVICE_BASE_URL = os.environ.get("PROJECT_SERVICE_URL", "http://127.0.0
 ANALYTICS_SERVICE_BASE_URL = os.environ.get("ANALYTICS_SERVICE_URL", "http://127.0.0.1:8003")
 NOTIFICATION_SERVICE_BASE_URL = os.environ.get("NOTIFICATION_SERVICE_URL", "http://127.0.0.1:8004")
 API_PREFIX = "/api/v1"
+ANALYTICS_API_PREFIX = "/api/analytics"
 # Define path for session file relative to user's home or workspace
 # For simplicity, placing it in the workspace root
 SESSION_FILE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '.logged_in_user'))
@@ -978,7 +979,7 @@ def project_analytics(project_id, type, visualize):
         return
         
     try:
-        url = f"{ANALYTICS_SERVICE_BASE_URL}/api/projects/{project_id}"
+        url = f"{ANALYTICS_SERVICE_BASE_URL}{ANALYTICS_API_PREFIX}/project/{project_id}"
         params = {"report_type": type, "visualize": visualize}
         response = requests.get(url, params=params, headers={"Authorization": f"Bearer {token}"}, timeout=10)
         
@@ -1007,7 +1008,7 @@ def team_analytics(team_id, project_id, type, visualize):
         return
         
     try:
-        url = f"{ANALYTICS_SERVICE_BASE_URL}/api/teams/{team_id}"
+        url = f"{ANALYTICS_SERVICE_BASE_URL}{ANALYTICS_API_PREFIX}/team/{team_id}"
         params = {"report_type": type, "visualize": visualize}
         if project_id:
             params["project_id"] = project_id
@@ -1038,7 +1039,7 @@ def user_analytics(type, visualize):
         return
         
     try:
-        url = f"{ANALYTICS_SERVICE_BASE_URL}/api/users/{user['id']}"
+        url = f"{ANALYTICS_SERVICE_BASE_URL}{ANALYTICS_API_PREFIX}/user/{user['id']}"
         params = {"report_type": type, "visualize": visualize}
         response = requests.get(url, params=params, headers={"Authorization": f"Bearer {token}"}, timeout=10)
         
@@ -1076,7 +1077,7 @@ def email_group():
 def send_email(user_id, email, subject, body):
     """Send an email notification."""
     try:
-        url = f"{NOTIFICATION_SERVICE_BASE_URL}/api/v1/notifications/email"
+        url = f"{NOTIFICATION_SERVICE_BASE_URL}/notifications/email"
         payload = {
             "user_id": user_id,
             "email": email,
@@ -1098,7 +1099,7 @@ def send_email(user_id, email, subject, body):
 def process_email_queue():
     """Process pending email notifications."""
     try:
-        url = f"{NOTIFICATION_SERVICE_BASE_URL}/api/v1/notifications/email/process"
+        url = f"{NOTIFICATION_SERVICE_BASE_URL}/notifications/email/process"
         response = requests.post(url, timeout=10)
         
         if response.status_code == 200:
@@ -1125,7 +1126,7 @@ def calendar_group():
 def schedule_calendar_event(user_id, email, summary, description, start, end):
     """Schedule a calendar event."""
     try:
-        url = f"{NOTIFICATION_SERVICE_BASE_URL}/api/v1/notifications/calendar"
+        url = f"{NOTIFICATION_SERVICE_BASE_URL}/notifications/calendar"
         payload = {
             "user_id": user_id,
             "email": email,
@@ -1149,7 +1150,7 @@ def schedule_calendar_event(user_id, email, summary, description, start, end):
 def process_calendar_queue():
     """Process pending calendar events."""
     try:
-        url = f"{NOTIFICATION_SERVICE_BASE_URL}/api/v1/notifications/calendar/process"
+        url = f"{NOTIFICATION_SERVICE_BASE_URL}/notifications/calendar/process"
         response = requests.post(url, timeout=10)
         
         if response.status_code == 200:
