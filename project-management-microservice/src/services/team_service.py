@@ -74,3 +74,7 @@ class TeamService:
             return False  # Team not found
         self.team_dal.removeUserFromTeam(str(userId), str(teamId))
         return True
+        
+    def getTeamMembers(self, teamId: UUID) -> List[dict]:
+        """Get all members of a specific team."""
+        return self.team_dal.getTeamMembers(str(teamId))

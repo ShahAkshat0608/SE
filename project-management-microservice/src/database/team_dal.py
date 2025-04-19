@@ -87,3 +87,18 @@ class TeamDAL:
         )
         count = cursor.fetchone()[0]
         return count > 0
+        
+    def getTeamMembers(self, team_id: str) -> List[dict]:
+        """Get all members of a team."""
+        cursor = self.conn.cursor()
+        cursor.execute(
+            """
+            SELECT tm.user_id, u.email, u.name 
+            FROM team_members tm
+            JOIN users u ON tm.user_id = u.id
+            WHERE tm.team_id = ?
+            """,
+            (team_id,)
+        )
+        rows = cursor.fetchall()
+        return [dict(row) for row in rows]

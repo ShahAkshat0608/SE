@@ -15,12 +15,14 @@ import time
 from ..utils.auth_token_gen import create_access_token
 from ..utils.auth_utils import verify_token
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from ..services.auto_subtask_service import SubtaskAIService
 
 # Initialize security for Bearer token authentication
 security = HTTPBearer()
 
 router = APIRouter()
 user_client = APIClient()
+subtask_ai_service = SubtaskAIService()  # Initialize the AI service
 global access_token
 # access_token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI1IiwiZW1haWwiOiJqa2xAZ21haWwuY29tIiwiZXhwIjoxNzQ0OTgwNDgwLjQzMzI5fQ.Qw7tGmHqR7Dgj_g_-HxhwuzTpNFMqe9WM5j9Pa0LIiE"
 
@@ -270,12 +272,27 @@ async def create_subtasks_with_ai(
     # 👇 AI-based subtask generation
     try:
         subtask_list = subtask_ai_service.get_subtasks_from_ai(main_task_description)
+        if not subtask_list or not isinstance(subtask_list, list):
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"AI generated invalid subtask format: {str(subtask_list)[:100]}..."
+            )
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                             detail=f"AI subtask generation failed: {str(e)}")
     
     results = []
-    for subtask_obj in subtask_list:  
+    errors = []
+    
+    for subtask_obj in subtask_list:
+        if not isinstance(subtask_obj, dict):
+            errors.append(f"Invalid subtask format: {str(subtask_obj)}")
+            continue
+            
+        if 'name' not in subtask_obj or 'description' not in subtask_obj:
+            errors.append(f"Subtask missing required fields: {str(subtask_obj)}")
+            continue
+            
         subtask_data = {
             "name": subtask_obj.get("name"), 
             "description": subtask_obj.get("description"),
@@ -291,8 +308,21 @@ async def create_subtasks_with_ai(
         except PermissionError as e:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
         except ValueError as e:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-
+            errors.append(str(e))
+        except Exception as e:
+            errors.append(f"Error creating subtask: {str(e)}")
+    
+    if not results and errors:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Failed to create any subtasks. Errors: {'; '.join(errors[:3])}"
+        )
+    
+    return {
+        "subtasks": results,
+        "errors": errors if errors else None,
+        "count": len(results)
+    }
 
 @router.post("/tasks/{task_id}/subtasks", response_model=Dict)
 async def create_subtask(
